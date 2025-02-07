@@ -17,6 +17,8 @@ public sealed unsafe class MainAppService
     DesktopWindowXamlSource? _source;
     HWND _mainWnd;
     SettingsWindow? _window;
+    private uint _taskbarCreatedMessage;
+    private NOTIFYICONDATAW* _notifyIconData;
 
     public void Initialize()
     {
@@ -49,12 +51,16 @@ public sealed unsafe class MainAppService
 
         fixed (char* lpWindowTitle = "MicaForEveryoneNotificationIcon")
         {
-            _mainWnd = CreateWindowExW(WS.WS_EX_NOACTIVATE | WS.WS_EX_TOPMOST, lpWindowTitle, null, WS.WS_POPUPWINDOW, 0, 0, 0, 0, HWND.NULL, HMENU.NULL, instance, gcHandlePtr.ToPointer());
+            _mainWnd = CreateWindowExW(WS.WS_EX_NOACTIVATE | WS.WS_EX_TOPMOST | WS.WS_EX_TOOLWINDOW, lpWindowTitle, null, WS.WS_POPUPWINDOW, 0, 0, 0, 0, HWND.NULL, HMENU.NULL, instance, gcHandlePtr.ToPointer());
         }
         var rgn = CreateRectRgn(0, 0, 0, 0);
         SetWindowRgn(_mainWnd, rgn, false);
-        // We have to show the window, or it crashes.
         ShowWindow(_mainWnd, 5);
+
+        fixed (char* lpWindowMessage = "TaskbarCreated")
+        {
+            _taskbarCreatedMessage = RegisterWindowMessageW(lpWindowMessage);
+        }
     }
 
     public void ActivateSettings()
@@ -101,21 +107,21 @@ public sealed unsafe class MainAppService
 
                     SetWindowLongPtrW(hWnd, GWL.GWL_USERDATA, gcHandlePtr);
 
-                    NOTIFYICONDATAW notifyIconData = new();
-                    notifyIconData.hWnd = hWnd;
-                    notifyIconData.guidItem = new Guid([0xA0, 0x23, 0x5A, 0x9F, 0xC6, 0xB6, 0x41, 0x89, 0xAE, 0x4B, 0xAC, 0x00, 0x9F, 0xC6, 0x78, 0x7C]);
-                    notifyIconData.cbSize = (uint)sizeof(NOTIFYICONDATAW);
-                    notifyIconData.hIcon = smallIcon;
-                    notifyIconData.uVersion = 4;
-                    notifyIconData.uCallbackMessage = WM.WM_APP + 1;
+                    NOTIFYICONDATAW* notifyIconData = appService._notifyIconData = (NOTIFYICONDATAW*)NativeMemory.AllocZeroed((nuint)sizeof(NOTIFYICONDATAW));
+                    notifyIconData->hWnd = hWnd;
+                    notifyIconData->guidItem = new Guid([0xA0, 0x23, 0x5A, 0x9F, 0xC6, 0xB6, 0x41, 0x89, 0xAE, 0x4B, 0xAC, 0x00, 0x9F, 0xC6, 0x78, 0x7C]);
+                    notifyIconData->cbSize = (uint)sizeof(NOTIFYICONDATAW);
+                    notifyIconData->hIcon = smallIcon;
+                    notifyIconData->uVersion = 4;
+                    notifyIconData->uCallbackMessage = WM.WM_APP + 1;
 
                     // Currently, we can't show a tool tip for the app name,
                     // so we just tell Windows to show it for us.
                     // It might look a bit ugly, but it works.
-                    notifyIconData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_GUID;
-                    "Mica For Everyone".CopyTo(MemoryMarshal.CreateSpan(ref notifyIconData.szTip[0], 128));
-                    Shell_NotifyIconW(NIM_ADD, &notifyIconData);
-                    Shell_NotifyIconW(NIM_SETVERSION, &notifyIconData);
+                    notifyIconData->uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_GUID;
+                    "Mica For Everyone".CopyTo(MemoryMarshal.CreateSpan(ref notifyIconData->szTip[0], 128));
+                    Shell_NotifyIconW(NIM_ADD, notifyIconData);
+                    Shell_NotifyIconW(NIM_SETVERSION, notifyIconData);
                     break;
                 }
 
@@ -178,12 +184,34 @@ public sealed unsafe class MainAppService
                     var pointer = GetWindowLongPtrW(hWnd, GWL.GWL_USERDATA);
                     var gc = GCHandle.FromIntPtr(pointer);
                     var appService = (MainAppService)(gc.Target!);
+
+                    NativeMemory.Free(appService._notifyIconData);
+
                     appService._source?.Dispose();
                     appService._source = null;
 
                     gc.Free();
 
                     PostQuitMessage(0);
+                    break;
+                }
+
+            default:
+                {
+                    var pointer = GetWindowLongPtrW(hWnd, GWL.GWL_USERDATA);
+                    if (pointer == IntPtr.Zero)
+                        break;
+                    var gc = GCHandle.FromIntPtr(pointer);
+                    var appService = (MainAppService?)(gc.Target);
+                    if (Msg == appService?._taskbarCreatedMessage)
+                    {
+                        if (!Shell_NotifyIconW(NIM_MODIFY, appService._notifyIconData))
+                        {
+                            Shell_NotifyIconW(NIM_ADD, appService._notifyIconData);
+                            Shell_NotifyIconW(NIM_SETVERSION, appService._notifyIconData);
+                        }
+                        return 0;
+                    }
                     break;
                 }
         }

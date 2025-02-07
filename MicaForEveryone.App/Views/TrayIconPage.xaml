@@ -10,7 +10,7 @@
     mc:Ignorable="d">
 
     <Page.ContextFlyout>
-        <MenuFlyout>
+        <MenuFlyout ShouldConstrainToRootBounds="False">
             <MenuFlyoutItem x:Uid="SettingsFlyoutItem" Command="{x:Bind ViewModel.SettingsCommand}">
                 <MenuFlyoutItem.Icon>
                     <SymbolIcon Symbol="Setting" />
