@@ -28,6 +28,9 @@ public abstract partial class Rule: ObservableObject, IEquatable<Rule>
     [ObservableProperty]
     public partial string? TitleBarColorCode { get; set; }
 
+    [JsonIgnore]
+    public abstract int Priority { get; }
+    
     public virtual bool Equals(Rule? other)
     {
         return TitleBarColor == other!.TitleBarColor

@@ -8,6 +8,8 @@ public sealed partial class ClassRule : Rule
 {
     public required string ClassName { get; set; }
 
+    public override int Priority => 2;
+
     public override bool Equals(Rule? other)
     {
         return other is not null

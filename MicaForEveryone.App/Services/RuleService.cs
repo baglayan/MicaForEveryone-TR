@@ -168,7 +168,7 @@ public sealed class RuleService : IRuleService
         if (!IsWindowEligible(hWnd))
             return Task.CompletedTask;
 
-        Rule mostApplicableRule = _settingsService.Settings!.Rules.Where(f => f.IsRuleApplicable(hWnd)).OrderByDescending(f => f is not GlobalRule).First();
+        Rule mostApplicableRule = _settingsService.Settings!.Rules.Where(f => f.IsRuleApplicable(hWnd)).OrderByDescending(x => x.Priority).First();
 
         if (mostApplicableRule.TitleBarColor != TitleBarColorMode.Default)
         {
