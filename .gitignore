@@ -222,6 +222,9 @@ _pkginfo.txt
 *.appx
 *.appxbundle
 *.appxupload
+*.msix
+*.msixbundle
+*.msixupload
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
@@ -390,7 +393,6 @@ FodyWeavers.xsd
 # Windows Installer files from build outputs
 *.cab
 *.msi
-*.msix
 *.msm
 *.msp
 
