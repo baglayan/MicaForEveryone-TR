@@ -3,13 +3,14 @@ using MicaForEveryone.CoreUI;
 using MicaForEveryone.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Runtime.InteropServices;
 using TerraFX.Interop.Windows;
 using Windows.UI;
-
+using WinRT;
 using static TerraFX.Interop.Windows.Windows;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -46,8 +47,14 @@ public sealed partial class SettingsWindow : Window
             SetWindowSubclass(hwnd, &WindowProc, 0, 0);
 
             uint dpi = GetDpiForWindow(hwnd);
+
             int width = (int)(900 * dpi / 96.0f);
             int height = (int)(600 * dpi / 96.0f);
+
+            int min = (int)(500 * dpi / 96.0f);
+
+            OverlappedPresenter presenter = AppWindow.Presenter.As<OverlappedPresenter>();
+            presenter.PreferredMinimumWidth = presenter.PreferredMinimumHeight = min;
 
             AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
 
@@ -80,6 +87,7 @@ public sealed partial class SettingsWindow : Window
             }
             return result;
         }
+        /*
         if (arg2 == WM.WM_GETMINMAXINFO)
         {
             var dpi = GetDpiForWindow(hWND);
@@ -88,6 +96,7 @@ public sealed partial class SettingsWindow : Window
             minMaxInfo->ptMinTrackSize.x = (int)(500 * scale);
             minMaxInfo->ptMinTrackSize.y = (int)(500 * scale);
         }
+        */
         return DefSubclassProc(hWND, arg2, wPARAM, lPARAM);
     }
 
@@ -109,6 +118,7 @@ public sealed partial class SettingsWindow : Window
 
     private void Window_Activated(object sender, WindowActivatedEventArgs args)
     {
+        /*
         if (args.WindowActivationState == WindowActivationState.Deactivated)
         {
             try
@@ -122,7 +132,7 @@ public sealed partial class SettingsWindow : Window
         {
             VisualStateManager.GoToState(RootPage, "TitleBarActive", false);
         }
-
+        */
     }
 
     private void ChangeButtonBackground()
@@ -149,6 +159,11 @@ public sealed partial class SettingsWindow : Window
     private void Window_Closed(object sender, WindowEventArgs args)
     {
         Activated -= Window_Activated;
+    }
+
+    private void TitleBarControl_PaneToggleRequested(TitleBar sender, object args)
+    {
+        NavigationViewControl.IsPaneOpen = !NavigationViewControl.IsPaneOpen;
     }
 }
 

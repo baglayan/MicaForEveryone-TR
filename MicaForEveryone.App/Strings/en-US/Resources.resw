@@ -126,7 +126,7 @@
   <data name="AppSettingsPage.Header" xml:space="preserve">
     <value>App settings</value>
   </data>
-  <data name="AppTitleTextBlock.Text" xml:space="preserve">
+  <data name="TitleBarControl.Title" xml:space="preserve">
     <value>Mica For Everyone</value>
   </data>
   <data name="BackdropTypeCard.Header" xml:space="preserve">

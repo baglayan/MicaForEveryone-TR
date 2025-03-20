@@ -85,6 +85,7 @@
                 <x:Double x:Key="SettingsCardWrapThreshold">0</x:Double>
             </Grid.Resources>
 
+            <!--
             <StackPanel
                 x:Name="TitleBarControl"
                 Margin="48,0,0,0"
@@ -104,13 +105,26 @@
                     VerticalAlignment="Center"
                     Style="{StaticResource CaptionTextBlockStyle}" />
             </StackPanel>
+            -->
+
+            <TitleBar
+                x:Name="TitleBarControl"
+                x:Uid="TitleBarControl"
+                VerticalAlignment="Stretch"
+                IsPaneToggleButtonVisible="True"
+                PaneToggleRequested="TitleBarControl_PaneToggleRequested">
+                <TitleBar.IconSource>
+                    <BitmapIconSource ShowAsMonochrome="False" UriSource="ms-appx:///Assets/Square44x44Logo.png" />
+                </TitleBar.IconSource>
+            </TitleBar>
 
             <NavigationView
                 x:Name="NavigationViewControl"
-                Grid.RowSpan="2"
+                Grid.Row="1"
                 CompactModeThresholdWidth="0"
                 ExpandedModeThresholdWidth="0"
                 IsBackButtonVisible="Collapsed"
+                IsPaneToggleButtonVisible="False"
                 IsSettingsVisible="False"
                 ItemInvoked="NavigationView_ItemInvoked"
                 MenuItemTemplateSelector="{StaticResource NavigationItemSelector}"
@@ -118,16 +132,19 @@
                 OpenPaneLength="280"
                 PaneDisplayMode="LeftMinimal"
                 SelectionChanged="NavigationViewControl_SelectionChanged">
+
                 <NavigationView.Resources>
                     <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
+                    <Thickness x:Key="NavigationViewMinimalContentGridBorderThickness">0</Thickness>
                     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                 </NavigationView.Resources>
+
                 <NavigationView.FooterMenuItems>
                     <local:AddNewRuleMenuItem />
                     <local:AppSettingsMenuItem />
                 </NavigationView.FooterMenuItems>
                 <NavigationView.Content>
-                    <Frame x:Name="_contentFrame" Margin="0,36,0,0" />
+                    <Frame x:Name="_contentFrame" />
                 </NavigationView.Content>
             </NavigationView>
 
@@ -148,12 +165,9 @@
                     <VisualState>
                         <VisualState.Setters>
                             <Setter Target="NavigationViewControl.PaneDisplayMode" Value="Left" />
-                            <Setter Target="NavigationViewControl.IsPaneToggleButtonVisible" Value="False" />
+                            <Setter Target="TitleBarControl.IsPaneToggleButtonVisible" Value="False" />
                             <Setter Target="NavigationViewControl.IsPaneOpen" Value="True" />
-                            <Setter Target="NavigationViewControl.(Grid.RowSpan)" Value="1" />
-                            <Setter Target="NavigationViewControl.(Grid.Row)" Value="1" />
                             <Setter Target="TitleBarRow.Height" Value="32" />
-                            <Setter Target="TitleBarControl.Margin" Value="0" />
                             <Setter Target="_contentFrame.Margin" Value="0" />
                         </VisualState.Setters>
                         <VisualState.StateTriggers>

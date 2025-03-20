@@ -9,12 +9,15 @@ using TerraFX.Interop.Windows;
 using static TerraFX.Interop.Windows.Windows;
 using WinRT.Interop;
 using WinRT;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Content;
+using Microsoft.UI.Dispatching;
 
 namespace MicaForEveryone.App.Services;
 
 public sealed unsafe class MainAppService
 {
-    DesktopWindowXamlSource? _source;
+    XamlIsland? _source;
     HWND _mainWnd;
     SettingsWindow? _window;
     private uint _taskbarCreatedMessage;
@@ -100,10 +103,12 @@ public sealed unsafe class MainAppService
                     var appService = (MainAppService)(gc.Target!);
                     appService._source = new();
                     var thing = Win32Interop.GetWindowIdFromWindow(new IntPtr(hWnd.Value));
-                    appService._source.Initialize(thing);
+
+                    DesktopChildSiteBridge bridge = DesktopChildSiteBridge.CreateWithDispatcherQueue(DispatcherQueue.GetForCurrentThread(), thing);
                     appService._source.Content = new TrayIconPage();
-                    appService._source.SiteBridge.ResizePolicy = Microsoft.UI.Content.ContentSizePolicy.ResizeContentToParentWindow;
-                    appService._source.SiteBridge.Show();
+                    bridge.Connect(appService._source.ContentIsland);
+                    bridge.ResizePolicy = ContentSizePolicy.ResizeContentToParentWindow;
+                    bridge.Show();
 
                     SetWindowLongPtrW(hWnd, GWL.GWL_USERDATA, gcHandlePtr);
 
