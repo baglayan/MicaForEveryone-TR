@@ -3,8 +3,8 @@ using MicaForEveryone.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using TerraFX.Interop.Windows;
 using static TerraFX.Interop.Windows.Windows;
@@ -47,6 +47,18 @@ public struct WINDOWCOMPOSITIONATTRIBDATA
     public WINDOWCOMPOSITIONATTRIB Attrib;
     public IntPtr pvData;
     public uint cbData;
+}
+
+public ref struct Ref<T>
+{
+    private ref T _reference;
+
+    public Ref(ref T reference)
+    {
+        _reference = ref reference;
+    }
+
+    public ref T GetReference() => ref _reference;
 }
 
 public sealed class RuleService : IRuleService
@@ -108,6 +120,17 @@ public sealed class RuleService : IRuleService
         _ = NewWindowShowHandlerAsync(App.Services.GetRequiredService<IRuleService>(), hWnd);
     }
 
+    private void CallEnumWindows()
+    {
+        RuleService currentRuleService = this;
+        Ref<RuleService> ruleService = new(ref currentRuleService);
+
+        unsafe
+        {
+            EnumWindows(&EnumWindowsProc, new((nint)Unsafe.AsPointer(ref ruleService)));
+        }
+    }
+
     public async Task ApplyRulesToAllWindowsAsync()
     {
         // Switch to a background thread, if we are not already in one.
@@ -116,22 +139,24 @@ public sealed class RuleService : IRuleService
         // Increase the session count to prevent concurrency issues,
         // that is, if the user changes the settings while we are applying the rules.
         // This tells the existing procedure to cancel the existing operation.
-        int incrementedValue = Interlocked.Increment(ref _currentSession);
+        // int incrementedValue = Interlocked.Increment(ref _currentSession);
 
-        unsafe
-        {
-            EnumWindows(&EnumWindowsProc, new(incrementedValue));
-        }
+        CallEnumWindows();
     }
 
     [UnmanagedCallersOnly]
     private static BOOL EnumWindowsProc(HWND hWnd, LPARAM lParam)
     {
+        /*
         if (Volatile.Read(ref _currentSession) != lParam.Value.ToInt32())
             // User changed the settings, cancel the operation.
             return BOOL.FALSE;
+        */
 
-        _ = App.Services.GetRequiredService<IRuleService>().ApplyRuleToWindowAsync(hWnd);
+        unsafe
+        {
+            Unsafe.AsRef<Ref<RuleService>>(lParam).GetReference().ApplyRuleToWindowAsync(hWnd);
+        }
 
         return BOOL.TRUE;
     }
