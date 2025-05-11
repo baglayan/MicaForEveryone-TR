@@ -27,8 +27,18 @@ jobs:
           ForEach-Object {
             Copy-Item -Path $_.FullName -Destination . -Force
           }
-      - name: Upload build artifacts
+
+          Get-ChildItem -Path . -Recurse -Filter *.pdb |
+          ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination . -Force
+          }
+      - name: Upload build binaries
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.configuration }} - ${{ matrix.architecture }}
+          name: Binaries - ${{ matrix.configuration }} - ${{ matrix.architecture }}
           path: "*.msix"
+      - name: Upload build symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: Symbols - ${{ matrix.configuration }} - ${{ matrix.architecture }}
+          path: "*.pdb"
