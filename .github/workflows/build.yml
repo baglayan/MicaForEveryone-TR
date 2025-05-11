@@ -68,7 +68,8 @@ jobs:
         run: |
           $ns = @{ "ns" = "http://schemas.microsoft.com/appx/manifest/foundation/windows10" }
           $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
-          Write-Output "version=$identity.Node.Version" >> $env:GITHUB_OUTPUT
+          $version=$identity.Node.Version
+          Write-Output "version=$version" >> $env:GITHUB_OUTPUT
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Restore
