@@ -61,7 +61,7 @@ jobs:
       - name: Download binary artifacts
         uses: actions/download-artifact@v4
         with:
-          name: Binaries - ${{ matrix.configuration }} - *
+          pattern: Binaries - ${{ matrix.configuration }} - *
           path: ${{ github.workspace }}/BundleArtifacts
       - name: Extract bundle version
         id: getbundlever
