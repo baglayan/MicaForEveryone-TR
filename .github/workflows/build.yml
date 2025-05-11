@@ -112,3 +112,51 @@ jobs:
           $csvIds -split "," | ForEach-Object {
             gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
           }
+
+  msixsym:
+    runs-on: windows-latest
+
+    needs: [build-architectures]
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Find symbol artifacts
+        id: getartifactids
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $configuration = "${{ matrix.configuration }}"
+          $runId = "${{ github.run_id }}"
+          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
+
+          $matchingIds = $artifactsJson.artifacts `
+            | Where-Object { $_.name -like "Symbols - $configuration - *" } `
+            | ForEach-Object { $_.id }
+
+          $csvIds = ($matchingIds -join ",")
+          Write-Output "Matching artifact IDs: $csvIds"
+          Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
+      - name: Download symbol artifacts
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.getartifactids.outputs.artifact_ids }}
+          path: ${{ github.workspace }}/Symbols
+          merge-multiple: true
+      - name: Make msixsym
+        run: Compress-Archive -Path ${{ github.workspace }}/Symbols/*.pdb -DestinationPath bundle.msixsym
+      - name: Upload msixsym
+        uses: actions/upload-artifact@v4
+        with:
+          name: Symbols - Bundle - ${{ matrix.configuration }}
+          path: bundle.msixsym
+      - name: Delete architecture-specific artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $csvIds = "${{ steps.getartifactids.outputs.artifact_ids }}"
+          $csvIds -split "," | ForEach-Object {
+            gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
+          }
