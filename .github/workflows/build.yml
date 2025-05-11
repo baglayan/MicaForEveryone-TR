@@ -29,7 +29,7 @@ jobs:
           }
       - name: Copy build symbols
         run: |
-          $folderSearch = ${{ matrix.configuration == 'Release' && '\\native\\' || '' }}
+          $folderSearch = "${{ matrix.configuration == 'Release' && '\\native\\' || '' }}"
           Get-ChildItem -Path . -Recurse -Filter *.pdb |
           Where-Object { $_.FullName -match $folderSearch } |
           ForEach-Object {
