@@ -69,8 +69,18 @@ jobs:
           $ns = @{ "ns" = "http://schemas.microsoft.com/appx/manifest/foundation/windows10" }
           $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
           Write-Output "version=$identity.Node.Version" >> $env:GITHUB_OUTPUT
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Restore
+        run: msbuild /t:Restore
+      - name: Get makeappx path
+        id: getmakeappx
+        run: |
+          $path = msbuild MicaForEveryone.App\MicaForEveryone.App.csproj -getProperty:MakeAppxExeFullPath
+          Write-Output "makeappxpath=$path" >> $env:GITHUB_OUTPUT
       - name: Build bundle
-        run: makeappx bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
+        run: >-
+          "{{ steps.getmakeappx.outputs.makeappxpath }}" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
