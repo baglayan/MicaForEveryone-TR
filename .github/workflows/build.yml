@@ -1,0 +1,32 @@
+name: Build (WinUI 3)
+on: [push, pull_request]
+jobs:
+  build-architectures:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        architecture: [x64, x86, arm64]
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Build
+        run: msbuild /t:Build /p:Platform=${{ matrix.architecture }} /p:Configuration=${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true
+      - name: Copy build artifacts
+        run: |
+          Get-ChildItem -Path . -Recurse -Filter *.msix |
+          Where-Object { $_.FullName -notmatch '\\Dependencies\\' } |
+          ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination . -Force
+          }
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.configuration }} - ${{ matrix.architecture }}
+          path: "*.msix"
