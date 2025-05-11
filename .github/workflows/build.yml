@@ -45,3 +45,34 @@ jobs:
         with:
           name: Symbols - ${{ matrix.configuration }} - ${{ matrix.architecture }}
           path: "*.pdb"
+
+  bundle:
+    runs-on: windows-latest
+
+    needs: [build-architectures]
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download binary artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Binaries - ${{ matrix.configuration }} - *
+          path: ${{ github.workspace }}/BundleArtifacts
+      - name: Extract bundle version
+        id: getbundlever
+        run: |
+          $ns = @{ "ns" = "http://schemas.microsoft.com/appx/manifest/foundation/windows10" }
+          $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
+          Write-Output "version=$identity.Node.Version" >> $env:GITHUB_OUTPUT
+      - name: Build bundle
+        run: makeappx bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
+      - name: Upload bundle artifact
+        uses: actions/upload-artifacts@v4
+        with:
+          name: Binaries - Bundle
+          path: bundle.msixbundle
