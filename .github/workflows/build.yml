@@ -20,15 +20,18 @@ jobs:
         run: msbuild /t:Restore
       - name: Build
         run: msbuild /t:Build /p:Platform=${{ matrix.architecture }} /p:Configuration=${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }}
-      - name: Copy build artifacts
+      - name: Copy build binaries
         run: |
           Get-ChildItem -Path . -Recurse -Filter *.msix |
           Where-Object { $_.FullName -notmatch '\\Dependencies\\' } |
           ForEach-Object {
             Copy-Item -Path $_.FullName -Destination . -Force
           }
-
+      - name: Copy build symbols
+        run: |
+          $folderSearch = ${{ matrix.configuration == 'Release' && '\\native\\' || '' }}
           Get-ChildItem -Path . -Recurse -Filter *.pdb |
+          Where-Object { $_.FullName -match $folderSearch } |
           ForEach-Object {
             Copy-Item -Path $_.FullName -Destination . -Force
           }
