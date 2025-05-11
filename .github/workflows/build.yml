@@ -60,6 +60,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Find binary artifacts
         id: getartifactids
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $configuration = "${{ matrix.configuration }}"
           $runId = "${{ github.run_id }}"
@@ -103,6 +105,8 @@ jobs:
           name: Binaries - Bundle - ${{ matrix.configuration }}
           path: bundle.msixbundle
       - name: Delete architecture-specific artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $csvIds = "${{ steps.getartifactids.outputs.artifact_ids }}"
           $csvIds -split "," | ForEach-Object {
