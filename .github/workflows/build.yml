@@ -80,7 +80,7 @@ jobs:
           Write-Output "makeappxpath=$path" >> $env:GITHUB_OUTPUT
       - name: Build bundle
         run: >-
-          "{{ steps.getmakeappx.outputs.makeappxpath }}" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
+          "${{ steps.getmakeappx.outputs.makeappxpath }}" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
