@@ -104,7 +104,7 @@ jobs:
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Binaries - Bundle - ${{ matrix.configuration }}
+          name: Binaries - ${{ matrix.configuration }} - Bundle
           path: bundle.msixbundle
       - name: Delete architecture-specific artifacts
         env:
