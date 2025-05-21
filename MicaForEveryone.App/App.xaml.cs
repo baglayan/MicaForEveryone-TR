@@ -27,12 +27,7 @@ namespace MicaForEveryone.App
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
-        {
-            _ = OnLaunchedAsync();
-        }
-
-        private async Task OnLaunchedAsync()
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             await Services.GetRequiredService<ISettingsService>().InitializeAsync();
             Services.GetRequiredService<IRuleService>().Initialize();
