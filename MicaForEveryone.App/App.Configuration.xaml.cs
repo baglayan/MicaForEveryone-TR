@@ -6,6 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using System;
 
+#if !DEBUG
+using Microsoft.Windows.ApplicationModel.Resources;
+using System.Globalization;
+using System.Net;
+using System.Net.NetworkInformation;
+#endif
+
 namespace MicaForEveryone.App;
 
 public partial class App
@@ -25,6 +32,22 @@ public partial class App
 
         collection.AddSingleton<IDispatchingService>(new DispatchingService(DispatcherQueue.GetForCurrentThread()));
         collection.AddSingleton<ILocalizationService>(new LocalizationService());
+
+#if !DEBUG
+        string appInsightsString = new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), "appsettings").GetString("AppInsightsConnectionString");
+        if (!string.IsNullOrEmpty(appInsightsString))
+        {
+            string domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
+            string hostName = Dns.GetHostName();
+
+            if (!hostName.EndsWith(domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                hostName = $"{hostName}.{domainName}";
+            }
+
+            collection.AddSingleton<ILoggingService>(new AppInsightsLoggingService(appInsightsString, new AppInsightsLoggingService.AppInsightsTags() { RoleInstance = hostName }));
+        }
+#endif
 
         // Check if we are really running packaged.
         collection.AddSingleton<IVersionInfoService, PackagedVersionInfoService>();

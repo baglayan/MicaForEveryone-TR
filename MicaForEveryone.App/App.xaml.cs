@@ -21,6 +21,10 @@ namespace MicaForEveryone.App
         public App()
         {
             this.InitializeComponent();
+
+#if !DEBUG
+            UnhandledException += OnUnhandledException;
+#endif
         }
 
         /// <summary>
@@ -33,6 +37,14 @@ namespace MicaForEveryone.App
             Services.GetRequiredService<IRuleService>().Initialize();
             Services.GetRequiredService<MainAppService>().Initialize();
             _ = Services.GetRequiredService<IRuleService>().ApplyRulesToAllWindowsAsync();
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            ILoggingService? loggingService = App.Services.GetService<ILoggingService>();
+
+            loggingService?.LogException(e.Exception);
+            loggingService?.FlushAsync().Wait();
         }
     }
 }
