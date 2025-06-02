@@ -4,11 +4,11 @@ using MicaForEveryone.App.ViewModels;
 using MicaForEveryone.CoreUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
+using Microsoft.Windows.Storage;
 using System;
 
 #if !DEBUG
 using Microsoft.Windows.ApplicationModel.Resources;
-using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 #endif
@@ -33,27 +33,51 @@ public partial class App
         collection.AddSingleton<IDispatchingService>(new DispatchingService(DispatcherQueue.GetForCurrentThread()));
         collection.AddSingleton<ILocalizationService>(new LocalizationService());
 
-#if !DEBUG
-        string appInsightsString = new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), "appsettings").GetString("AppInsightsConnectionString");
-        if (!string.IsNullOrEmpty(appInsightsString))
-        {
-            string domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
-            string hostName = Dns.GetHostName();
-
-            if (!hostName.EndsWith(domainName, StringComparison.OrdinalIgnoreCase))
-            {
-                hostName = $"{hostName}.{domainName}";
-            }
-
-            collection.AddSingleton<ILoggingService>(new AppInsightsLoggingService(appInsightsString, new AppInsightsLoggingService.AppInsightsTags() { RoleInstance = hostName }));
-        }
-#endif
-
         // Check if we are really running packaged.
         collection.AddSingleton<IVersionInfoService, PackagedVersionInfoService>();
         collection.AddSingleton<ISettingsService, PackagedSettingsService>();
         collection.AddSingleton<IStartupService, PackagedStartupService>();
         collection.AddSingleton<IUpdateCheckerService, PackagedUpdateCheckerService>();
+
+        string installId;
+        if (ApplicationData.GetDefault().LocalSettings.Values.TryGetValue("AppCenterId", out object? rawId) && rawId is string parsedId)
+        {
+            installId = parsedId;
+        }
+        else
+        {
+            ApplicationData.GetDefault().LocalSettings.Values["AppCenterId"] = installId = Guid.NewGuid().ToString();
+        }
+
+#if !DEBUG
+        if (DateTime.UtcNow < new DateTime(2026, 06, 30))
+        {
+            string appCenterString = new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), "appsettings").GetString("AppCenterConnectionString");
+            if (!string.IsNullOrEmpty(appCenterString))
+            {
+                collection.AddSingleton<ILoggingService, AppCenterLoggingService>(provider =>
+                {
+                    return new AppCenterLoggingService(appCenterString, installId, provider.GetRequiredService<IVersionInfoService>());
+                });
+            }
+        }
+        else
+        {
+            string appInsightsString = new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), "appsettings").GetString("AppInsightsConnectionString");
+            if (!string.IsNullOrEmpty(appInsightsString))
+            {
+                string domainName = IPGlobalProperties.GetIPGlobalProperties().DomainName;
+                string hostName = Dns.GetHostName();
+
+                if (!hostName.EndsWith(domainName, StringComparison.OrdinalIgnoreCase))
+                {
+                    hostName = $"{hostName}.{domainName}";
+                }
+
+                collection.AddSingleton<ILoggingService>(new AppInsightsLoggingService(appInsightsString, new AppInsightsLoggingService.AppInsightsTags() { RoleInstance = hostName }));
+            }
+        }
+#endif
 
         ConfigureServices(collection);
 

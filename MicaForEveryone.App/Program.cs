@@ -38,7 +38,7 @@ class Program
 
         if (keyInstance.IsCurrent)
         {
-            AppInstance.GetCurrent().Activated +=Program_Activated;
+            AppInstance.GetCurrent().Activated += Program_Activated;
         }
         else
         {

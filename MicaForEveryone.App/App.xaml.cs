@@ -1,8 +1,10 @@
 ﻿using MicaForEveryone.App.Services;
+using MicaForEveryone.App.Views;
 using MicaForEveryone.CoreUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using System.Threading.Tasks;
+using Microsoft.UI.Xaml.Controls;
+using System.Text.Json;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -22,9 +24,7 @@ namespace MicaForEveryone.App
         {
             this.InitializeComponent();
 
-#if !DEBUG
             UnhandledException += OnUnhandledException;
-#endif
         }
 
         /// <summary>
@@ -33,7 +33,22 @@ namespace MicaForEveryone.App
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            await Services.GetRequiredService<ISettingsService>().InitializeAsync();
+            ISettingsService settingsService = Services.GetRequiredService<ISettingsService>();
+            try
+            {
+                await settingsService.InitializeAsync();
+            }
+            catch (JsonException)
+            {
+                DialogWindow window = new("Invalid configuration file", "The configuration file is either malformed or corrupt.");
+                ContentDialogResult result = await window.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    await settingsService.OpenConfigurationFileAsync();
+                }
+                window.Close();
+                return;
+            }
             Services.GetRequiredService<IRuleService>().Initialize();
             Services.GetRequiredService<MainAppService>().Initialize();
             _ = Services.GetRequiredService<IRuleService>().ApplyRulesToAllWindowsAsync();
@@ -41,10 +56,11 @@ namespace MicaForEveryone.App
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+#if !DEBUG
             ILoggingService? loggingService = App.Services.GetService<ILoggingService>();
-
             loggingService?.LogException(e.Exception);
             loggingService?.FlushAsync().Wait();
+#endif
         }
     }
 }
