@@ -195,6 +195,7 @@ public sealed class RuleService : IRuleService
 
         unsafe
         {
+            const uint DWMWA_CAPTION_COLOR = 35;
             switch (mostApplicableRule.TitleBarColor)
             {
                 case TitleBarColorMode.System:
@@ -204,9 +205,10 @@ public sealed class RuleService : IRuleService
                     TitleBarColorMode normalizedTitleBarColorMode = mostApplicableRule.TitleBarColor == TitleBarColorMode.System ? _themingService.IsDarkMode() ? TitleBarColorMode.Dark : TitleBarColorMode.Light : mostApplicableRule.TitleBarColor;
                     uint useImmersiveDarkMode = (uint)(normalizedTitleBarColorMode == TitleBarColorMode.Dark ? 1 : 0);
                     DwmSetWindowAttribute(hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useImmersiveDarkMode, sizeof(uint));
+                    uint defaultCaption = DWMWA_COLOR_DEFAULT;
+                    DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, &defaultCaption, sizeof(uint));
                     break;
                 case TitleBarColorMode.Custom:
-                    const uint DWMWA_CAPTION_COLOR = 35;
                     Windows.UI.Color color = ColorConverter.ConvertToColor(mostApplicableRule.TitleBarColorCode);
                     COLORREF colorref = RGB(color.R, color.G, color.B);
                     DwmSetWindowAttribute(hWnd, DWMWA_CAPTION_COLOR, &colorref, (uint)sizeof(COLORREF));

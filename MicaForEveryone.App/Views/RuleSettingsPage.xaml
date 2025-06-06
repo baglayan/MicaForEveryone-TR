@@ -38,7 +38,7 @@
                 </ComboBox>
             </ct:SettingsCard>
 
-            <ct:SettingsCard Header="_Custom color">
+            <ct:SettingsCard x:Uid="CustomColorCard">
                 <ct:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE66A;" />
                 </ct:SettingsCard.HeaderIcon>

@@ -303,4 +303,7 @@
   <data name="TelemetryLabel.Text" xml:space="preserve">
     <value>Telemetry</value>
   </data>
+  <data name="CustomColorCard.Header" xml:space="preserve">
+    <value>Custom color</value>
+  </data>
 </root>
