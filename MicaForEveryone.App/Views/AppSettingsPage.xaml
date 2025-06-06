@@ -80,7 +80,10 @@
                 <labs:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE9D9;" />
                 </labs:SettingsCard.HeaderIcon>
-                <ToggleSwitch />
+                <ToggleSwitch
+                    x:Name="TelemetryToggle"
+                    IsOn="{x:Bind SettingsService.Settings.TelemetryEnabled, Mode=TwoWay}"
+                    Toggled="TelemetryToggle_Toggled" />
             </labs:SettingsCard>
 
             <TextBlock x:Uid="AboutLabel" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />

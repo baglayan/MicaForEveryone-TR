@@ -16,9 +16,11 @@ public partial class AppInsightsLoggingService : ILoggingService
     private readonly HttpClient _client;
     private List<(Exception Exception, DateTime Date)> _exceptions = new();
     private AppInsightsTags Tags { get; }
+    private readonly ISettingsService _settingsService;
 
-    public AppInsightsLoggingService(string connectionString, AppInsightsTags tags)
+    public AppInsightsLoggingService(string connectionString, AppInsightsTags tags, ISettingsService settingsService)
     {
+        _settingsService = settingsService;
         Span<Range> splitKeyValue = stackalloc Range[2];
         Uri? ingestionEndpoint = null;
         foreach (var keyValueStrings in MemoryExtensions.Split(connectionString, ';'))

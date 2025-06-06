@@ -19,10 +19,11 @@ public sealed partial class AppCenterLoggingService : ILoggingService
     private readonly string _processName;
     private readonly DateTime _appLaunchTimestamp;
     private readonly IVersionInfoService _versionInfoService;
+    private readonly ISettingsService _settingsService;
     private readonly HttpClient _client;
     private List<LogInfo> _exceptions = new();
 
-    public AppCenterLoggingService(string AppSecret, string InstallId, IVersionInfoService versionInfoService)
+    public AppCenterLoggingService(string AppSecret, string InstallId, IVersionInfoService versionInfoService, ISettingsService settingsService)
     {
         ArgumentException.ThrowIfNullOrEmpty(AppSecret, nameof(AppSecret));
         ArgumentException.ThrowIfNullOrEmpty(InstallId, nameof(InstallId));
@@ -36,10 +37,15 @@ public sealed partial class AppCenterLoggingService : ILoggingService
         _client = new();
         _client.DefaultRequestHeaders.Add("app-secret", AppSecret);
         _client.DefaultRequestHeaders.Add("install-id", InstallId);
+
+        _settingsService = settingsService;
     }
 
     public async Task FlushAsync()
     {
+        if (_settingsService.Settings?.TelemetryEnabled != true)
+            return;
+
         LogsRoot logs = new()
         {
             Logs = _exceptions

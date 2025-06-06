@@ -57,7 +57,7 @@ public partial class App
             {
                 collection.AddSingleton<ILoggingService, AppCenterLoggingService>(provider =>
                 {
-                    return new AppCenterLoggingService(appCenterString, installId, provider.GetRequiredService<IVersionInfoService>());
+                    return new AppCenterLoggingService(appCenterString, installId, provider.GetRequiredService<IVersionInfoService>(), provider.GetRequiredService<ISettingsService>());
                 });
             }
         }
@@ -74,7 +74,7 @@ public partial class App
                     hostName = $"{hostName}.{domainName}";
                 }
 
-                collection.AddSingleton<ILoggingService>(new AppInsightsLoggingService(appInsightsString, new AppInsightsLoggingService.AppInsightsTags() { RoleInstance = hostName }));
+                collection.AddSingleton<ILoggingService, AppInsightsLoggingService>(provider => new AppInsightsLoggingService(appInsightsString, new AppInsightsLoggingService.AppInsightsTags() { RoleInstance = hostName }, provider.GetRequiredService<ISettingsService>()));
             }
         }
 #endif
