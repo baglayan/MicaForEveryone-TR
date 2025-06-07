@@ -20,19 +20,17 @@
                             Color="{x:Bind SelectedColor, Mode=OneWay}" />
                         <Button
                             x:Name="OkButton"
+                            x:Uid="OkButton"
                             Grid.Row="1"
                             Grid.Column="0"
                             HorizontalAlignment="Stretch"
-                            Style="{StaticResource AccentButtonStyle}">
-                            _OK
-                        </Button>
+                            Style="{StaticResource AccentButtonStyle}" />
                         <Button
                             x:Name="CancelButton"
+                            x:Uid="CancelButton"
                             Grid.Row="1"
                             Grid.Column="1"
-                            HorizontalAlignment="Stretch">
-                            _Cancel
-                        </Button>
+                            HorizontalAlignment="Stretch" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

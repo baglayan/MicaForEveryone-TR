@@ -306,4 +306,10 @@
   <data name="CustomColorCard.Header" xml:space="preserve">
     <value />
   </data>
+  <data name="OkButton.Content" xml:space="preserve">
+    <value />
+  </data>
+  <data name="CancelButton.Content" xml:space="preserve">
+    <value>Bezár</value>
+  </data>
 </root>
