@@ -56,6 +56,9 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
+    
+    permissions:
+      actions: write
 
     steps:
       - name: Checkout
