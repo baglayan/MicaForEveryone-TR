@@ -312,4 +312,7 @@
   <data name="CancelButton.Content" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="PrivacyButton.Content" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
 </root>

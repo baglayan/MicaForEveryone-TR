@@ -97,7 +97,10 @@
                 </labs:SettingsExpander.HeaderIcon>
                 <labs:SettingsExpander.Items>
                     <labs:SettingsCard ContentAlignment="Left">
-                        <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/MicaForEveryone/MicaForEveryone" />
+                        <StackPanel>
+                            <HyperlinkButton Content="GitHub" NavigateUri="https://github.com/MicaForEveryone/MicaForEveryone" />
+                            <HyperlinkButton x:Uid="PrivacyButton" NavigateUri="https://github.com/MicaForEveryone/micaforeveryone.github.io/blob/main/PRIVACY.md" />
+                        </StackPanel>
                     </labs:SettingsCard>
                 </labs:SettingsExpander.Items>
             </labs:SettingsExpander>
