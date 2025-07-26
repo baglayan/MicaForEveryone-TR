@@ -208,7 +208,11 @@ jobs:
           merge-multiple: true
       - name: Merge into msixupload
         run: |
-          Compress-Archive -Path bundle.msixbundle, *.msixsym -DestinationPath MicaForEveryone_${{ matrix.configuration }}_Store.msixupload
+          $compress = @{
+            Path = "bundle.msixbundle, *.msixsym"
+            DestinationPath = "MicaForEveryone_${{ matrix.configuration }}_Store.msixupload"
+          }
+          Compress-Archive @compress
       - name: Upload msixupload artifact
         uses: actions/upload-artifact@v4
         with:
