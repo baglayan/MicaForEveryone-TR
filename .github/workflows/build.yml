@@ -49,10 +49,35 @@ jobs:
           $manifest.Package.Identity.Name = "${{ matrix.pkgName }}"
 
           $manifest.Save($manifestPath)
+      - name: Login to Azure
+        uses: azure/login@v2
+        if: github.ref_type == 'tag'
+        with:
+          client-id: ${{ secrets.TS_CLIENT_ID }}
+          tenant-id: ${{ secrets.TS_TENANT_ID }}
+          subscription-id: ${{ secrets.TS_SUBSCRIPTION_ID }}
+      - name: Create Trusted Signing configuration
+        if: github.ref_type == 'tag'
+        run: |
+          $config = @{
+            Endpoint = "${{ secrets.TS_ENDPOINT }}"
+            CodeSigningAccountName = "${{ secrets.TS_ACCOUNT }}"
+            CertificateProfileName = "${{ secrets.TS_CERT }}"
+          }
+          $json = $config | ConvertTo-Json
+          $json | Out-File -FilePath "${{ github.workspace }}\trusted-signing.json"
+      - name: Set App Center connection string
+        run: |
+          $xmlPath = "${{ github.workspace}}\MicaForEveryone.App\appsettings.resw"
+          [xml]$xml = Get-Content -Path $xmlPath
+          $xml.root.data | Where-Object { $_.name -eq "AppCenterConnectionString" } | ForEach-Object {
+            $_.value = "${{ secrets.AC_STRING }}"
+          }
+          $xml.Save($xmlPath)
       - name: Restore
         run: msbuild /t:Restore
       - name: Build
-        run: msbuild /t:Build /p:Platform=${{ matrix.architecture }} /p:Configuration=${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }}
+        run: msbuild /t:Build /p:Platform=${{ matrix.architecture }} /p:Configuration=${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
       - name: Copy build binaries
         run: |
           Get-ChildItem -Path . -Recurse -Filter *.msix |
@@ -93,6 +118,11 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         channel: [AppInstaller, Store]
+        release:
+          - ${{ github.ref_type == 'tag' }}
+        exclude:
+          - release: true
+            configuration: Debug
     
     permissions:
       actions: write
@@ -142,6 +172,14 @@ jobs:
       - name: Build bundle
         run: >-
           & "${{ steps.getmakeappx.outputs.makeappxpath }}" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p bundle.msixbundle
+      - name: Sign bundle
+        if: matrix.channel == 'AppInstaller' && github.ref_type == 'tag'
+        uses: Azure/trusted-signing-action@v0.5.9
+        with:
+          endpoint: ${{ secrets.TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.TS_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.TS_CERT }}
+          files: bundle.msixbundle
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
@@ -164,6 +202,11 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
+        release:
+          - ${{ github.ref_type == 'tag' }}
+        exclude:
+          - release: true
+            configuration: Debug
     
     permissions:
       actions: write
