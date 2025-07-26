@@ -189,12 +189,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $configuration = "${{ matrix.configuration }}"
-          $channel = "Store"
           $runId = "${{ github.run_id }}"
           $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
 
           $matchingIds = $artifactsJson.artifacts `
-            | Where-Object { $_.name -like "Symbols - $channel - $configuration - *" } `
+            | Where-Object { $_.name -like "Symbols - $configuration - *" } `
             | ForEach-Object { $_.id }
 
           $csvIds = ($matchingIds -join ",")
