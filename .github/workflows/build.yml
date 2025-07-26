@@ -4,10 +4,9 @@ on:
     branches: [ "reset-winui3" ]
     tags:
       - '*'
-    branches-ignore:
-      - master
   pull_request:
     branches: [ "reset-winui3" ]
+    
 jobs:
   build-architectures:
     runs-on: windows-latest
