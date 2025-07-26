@@ -1,5 +1,13 @@
 name: Build (WinUI 3)
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "reset-winui3" ]
+    tags:
+      - '*'
+    branches-ignore:
+      - master
+  pull_request:
+    branches: [ "reset-winui3" ]
 jobs:
   build-architectures:
     runs-on: windows-latest
