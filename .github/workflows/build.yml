@@ -67,6 +67,7 @@ jobs:
           $json = $config | ConvertTo-Json
           $json | Out-File -FilePath "${{ github.workspace }}\trusted-signing.json"
       - name: Set App Center connection string
+        if: github.ref_type == 'tag'
         run: |
           $xmlPath = "${{ github.workspace}}\MicaForEveryone.App\appsettings.resw"
           [xml]$xml = Get-Content -Path $xmlPath
