@@ -4,7 +4,7 @@
 		<!-- Built-in -->
 		
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net9.0-windows10.0.22621.0</TargetFramework>
+		<TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<RootNamespace>MicaForEveryone.App</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -29,7 +29,6 @@
 
 		<!-- C#/WinRT AOT compliance -->
 
-		<WindowsSdkPackageVersion>10.0.22621.56</WindowsSdkPackageVersion>
 		<CsWinRTRcwFactoryFallbackGeneratorForceOptOut>true</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
 		<WarnAsError>CsWinRT1028;CsWinRT1029</WarnAsError>
 		<CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
@@ -50,6 +49,7 @@
 		<RestoreAdditionalProjectSources>
 			https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-Labs/nuget/v3/index.json
 		</RestoreAdditionalProjectSources>
+		<GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
 	</PropertyGroup>
 
 	<ItemGroup>

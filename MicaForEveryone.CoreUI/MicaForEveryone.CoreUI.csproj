@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0-windows10.0.22621</TargetFramework>
+    <TargetFramework>net9.0-windows10.0.26100</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x64;x86;ARM64</Platforms>
-    <WindowsSdkPackageVersion>10.0.22621.56</WindowsSdkPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,6 +8,18 @@ jobs:
       matrix:
         architecture: [x64, x86, arm64]
         configuration: [Debug, Release]
+        channel: [AppInstaller, Store]
+        include:
+          - channel: AppInstaller
+            publisher:
+              "CN=Đặng Bình Minh, O=Đặng Bình Minh, L=Hà Nội, C=VN"
+            pkgName:
+              "MicaForEveryone.MicaForEveryone2"
+          - channel: Store
+            publisher:
+              "CN=95B8F56A-76FA-4743-83B0-5312C49D625D"
+            pkgName:
+              "DongleInsovaki.MicaForEveryone"
 
     steps:
       - name: Checkout
@@ -16,6 +28,15 @@ jobs:
         uses: actions/setup-dotnet@v3
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+      - name: Change package identity
+        run: |
+          $manifestPath = "MicaForEveryone.App\Package.appxmanifest"
+
+          $manifest = [xml](Get-Content $manifestPath)
+          $manifest.Package.Identity.Publisher = "${{ matrix.publisher }}"
+          $manifest.Package.Identity.Name = "${{ matrix.pkgName }}"
+
+          $manifest.Save($manifestPath)
       - name: Restore
         run: msbuild /t:Restore
       - name: Build
@@ -28,6 +49,7 @@ jobs:
             Copy-Item -Path $_.FullName -Destination . -Force
           }
       - name: Copy build symbols
+        if: ${{ matrix.channel == 'Store' }}
         run: |
           $folderSearch = "${{ matrix.configuration == 'Release' && '\\native\\' || '' }}"
           Get-ChildItem -Path . -Recurse -Filter *.pdb |
@@ -36,13 +58,15 @@ jobs:
             Copy-Item -Path $_.FullName -Destination . -Force
           }
       - name: Produce msixsym
+        if: ${{ matrix.channel == 'Store' }}
         run: Compress-Archive -Path *.pdb -DestinationPath MicaForEveryone_${{ matrix.configuration }}_${{ matrix.architecture }}.msixsym
       - name: Upload build binaries
         uses: actions/upload-artifact@v4
         with:
-          name: Binaries - ${{ matrix.configuration }} - ${{ matrix.architecture }}
+          name: Binaries - ${{ matrix.channel }} - ${{ matrix.configuration }} - ${{ matrix.architecture }}
           path: "*.msix"
       - name: Upload build symbols
+        if: ${{ matrix.channel == 'Store' }}
         uses: actions/upload-artifact@v4
         with:
           name: Symbols - ${{ matrix.configuration }} - ${{ matrix.architecture }}
@@ -56,6 +80,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
+        channel: [AppInstaller, Store]
     
     permissions:
       actions: write
@@ -69,11 +94,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $configuration = "${{ matrix.configuration }}"
+          $channel = "${{ matrix.channel }}"
           $runId = "${{ github.run_id }}"
           $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
 
           $matchingIds = $artifactsJson.artifacts `
-            | Where-Object { $_.name -like "Binaries - $configuration - *" } `
+            | Where-Object { $_.name -like "Binaries - $channel - $configuration - *" } `
             | ForEach-Object { $_.id }
 
           $csvIds = ($matchingIds -join ",")
@@ -107,7 +133,7 @@ jobs:
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Binaries - ${{ matrix.configuration }} - Bundle
+          name: Binaries - ${{ matrix.channel }} - ${{ matrix.configuration }} - Bundle
           path: bundle.msixbundle
       - name: Delete architecture-specific artifacts
         env:

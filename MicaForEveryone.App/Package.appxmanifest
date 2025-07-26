@@ -11,15 +11,15 @@
   IgnorableNamespaces="desktop uap uap5 rescap">
 
 	<Identity
-	  Name="MicaForEveryone.MicaForEveryone2"
-	  Publisher="CN=Đặng Bình Minh, O=Đặng Bình Minh, L=Hà Nội, C=VN"
+	  Name="DongleInsovaki.MicaForEveryone"
+	  Publisher="CN=95B8F56A-76FA-4743-83B0-5312C49D625D"
 	  Version="2.0.3.0" />
 
-	<mp:PhoneIdentity PhoneProductId="1be51f49-253e-46f4-ac2c-f9e60719f241" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+	<mp:PhoneIdentity PhoneProductId="d18ae762-9000-47c9-bb55-868c79f41ead" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
 	<Properties>
 		<DisplayName>Mica For Everyone</DisplayName>
-		<PublisherDisplayName>Dongle</PublisherDisplayName>
+		<PublisherDisplayName>Dongle Insovaki</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
 	</Properties>
 
@@ -36,10 +36,11 @@
 		  Executable="$targetnametoken$.exe"
 		  EntryPoint="$targetentrypoint$">
 			<uap:VisualElements
-			  DisplayName="Mica For Everyone (WinUI 3)"
+			  DisplayName="Mica For Everyone"
 			  BackgroundColor="transparent"
 			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png" Description="Mica For Everyone (WinUI 3)">
+			  Square44x44Logo="Assets\Square44x44Logo.png"
+        Description="Mica For Everyone">
 				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" ShortName="Mica For Everyone (WinUI 3)">
 					<uap:ShowNameOnTiles>
 						<uap:ShowOn Tile="square150x150Logo"/>
@@ -55,7 +56,7 @@
 					</uap3:AppExecutionAlias>
 				</uap3:Extension>
 				<uap5:Extension Category="windows.startupTask" Executable="MicaForEveryone.App.exe" EntryPoint="Windows.FullTrustApplication">
-					<uap5:StartupTask TaskId="MicaForEveryone2" Enabled="false" DisplayName="Mica For Everyone (WinUI 3)" />				
+					<uap5:StartupTask TaskId="MicaForEveryone2" Enabled="false" DisplayName="Mica For Everyone" />				
 				</uap5:Extension>
 			</Extensions>
 		</Application>
