@@ -9,6 +9,8 @@ jobs:
         architecture: [x64, x86, arm64]
         configuration: [Debug, Release]
         channel: [AppInstaller, Store]
+        release:
+          - ${{ github.ref_type == 'tag' }}
         include:
           - channel: AppInstaller
             publisher:
@@ -20,6 +22,9 @@ jobs:
               "CN=95B8F56A-76FA-4743-83B0-5312C49D625D"
             pkgName:
               "DongleInsovaki.MicaForEveryone"
+        exclude:
+          - release: true
+            configuration: Debug
 
     steps:
       - name: Checkout
