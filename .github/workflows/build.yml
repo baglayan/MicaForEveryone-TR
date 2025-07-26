@@ -143,3 +143,81 @@ jobs:
           $csvIds -split "," | ForEach-Object {
             gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
           }
+  
+  store-bundle:
+    runs-on: windows-latest
+
+    needs: [bundle]
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+    
+    permissions:
+      actions: write
+    
+    steps:
+      - name: Find binary artifact
+        id: getbinaryartifactid
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $configuration = "${{ matrix.configuration }}"
+          $runId = "${{ github.run_id }}"
+          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
+
+          $matchingIds = $artifactsJson.artifacts `
+            | Where-Object { $_.name -like "Binaries - Store - $configuration - Bundle" } `
+            | ForEach-Object { $_.id }
+
+          if ($matchingIds.Count -eq 0) {
+            Write-Error "No matching artifact found for Binaries - Store - $configuration - Bundle"
+          } else {
+            $csvIds = ($matchingIds -join ",")
+            Write-Output "Matching artifact IDs: $csvIds"
+            Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
+          }
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.getbinaryartifactid.outputs.artifact_ids }}
+          path: ${{ github.workspace }}
+          merge-multiple: true
+      - name: Find symbol artifacts
+        id: getartifactids
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $configuration = "${{ matrix.configuration }}"
+          $channel = "${{ matrix.channel }}"
+          $runId = "${{ github.run_id }}"
+          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
+
+          $matchingIds = $artifactsJson.artifacts `
+            | Where-Object { $_.name -like "Symbols - $channel - $configuration - *" } `
+            | ForEach-Object { $_.id }
+
+          $csvIds = ($matchingIds -join ",")
+          Write-Output "Matching artifact IDs: $csvIds"
+          Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
+      - name: Download symbol artifacts
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.getartifactids.outputs.artifact_ids }}
+          path: ${{ github.workspace }}
+          merge-multiple: true
+      - name: Merge into msixupload
+        run: |
+          Compress-Archive -Path bundle.msixbundle, *.msixsym -DestinationPath MicaForEveryone_${{ matrix.configuration }}_Store.msixupload
+      - name: Upload msixupload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MicaForEveryone_${{ matrix.configuration }}_Store.msixupload
+      - name: Delete binary artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $csvIds = "${{ steps.getbinaryartifactid.outputs.artifact_ids }}"
+          $csvIds -split "," | ForEach-Object {
+            gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
+          }
