@@ -209,7 +209,7 @@ jobs:
       - name: Merge into msixupload
         run: |
           $compress = @{
-            Path = "bundle.msixbundle, *.msixsym"
+            Path = "bundle.msixbundle", "*.msixsym"
             DestinationPath = "MicaForEveryone_${{ matrix.configuration }}_Store.msixupload"
           }
           Compress-Archive @compress
