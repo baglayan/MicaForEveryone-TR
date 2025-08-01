@@ -123,7 +123,7 @@ public sealed unsafe class MainAppService
                     // Currently, we can't show a tool tip for the app name,
                     // so we just tell Windows to show it for us.
                     // It might look a bit ugly, but it works.
-                    notifyIconData->uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_GUID;
+                    notifyIconData->uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_GUID | NIF_SHOWTIP;
                     "Mica For Everyone".CopyTo(MemoryMarshal.CreateSpan(ref notifyIconData->szTip[0], 128));
                     Shell_NotifyIconW(NIM_ADD, notifyIconData);
                     Shell_NotifyIconW(NIM_SETVERSION, notifyIconData);
