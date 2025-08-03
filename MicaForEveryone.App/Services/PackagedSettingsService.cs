@@ -51,12 +51,12 @@ public sealed partial class PackagedSettingsService : ISettingsService
 
     public async Task InitializeAsync()
     {
-        var folder = ApplicationData.Current.LocalFolder;
+        var folder = Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalFolder;
         var file = await folder.TryGetItemAsync(SettingsFileName);
         if (file is null)
         {
             StorageFile defaultFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///Assets/default.json"));
-            await defaultFile.CopyAsync(ApplicationData.Current.LocalFolder, SettingsFileName);
+            await defaultFile.CopyAsync(folder, SettingsFileName);
         }
         settingsFile = await folder.GetFileAsync(SettingsFileName);
         using Stream settingsStream = await settingsFile.OpenStreamForReadAsync();
@@ -67,7 +67,7 @@ public sealed partial class PackagedSettingsService : ISettingsService
 
     public async Task OpenConfigurationFileAsync()
     {
-        StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync(SettingsFileName);
+        StorageFile file = await Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalFolder.GetFileAsync(SettingsFileName);
         await Windows.System.Launcher.LaunchFileAsync(file);
     }
 

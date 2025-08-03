@@ -11,8 +11,8 @@
   IgnorableNamespaces="desktop uap uap5 rescap">
 
 	<Identity
-	  Name="DongleInsovaki.MicaForEveryone"
-	  Publisher="CN=95B8F56A-76FA-4743-83B0-5312C49D625D"
+	  Name="MicaForEveryone.MicaForEveryone2"
+	  Publisher="CN=Đặng Bình Minh, O=Đặng Bình Minh, L=Hà Nội, C=VN"
 	  Version="2.0.4.0" />
 
 	<mp:PhoneIdentity PhoneProductId="d18ae762-9000-47c9-bb55-868c79f41ead" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
