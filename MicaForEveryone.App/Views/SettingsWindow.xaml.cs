@@ -27,6 +27,7 @@ public sealed partial class SettingsWindow : Window
 
     private ILocalizationService LocalizationService { get; }
 
+    [DynamicWindowsRuntimeCast(typeof(OverlappedPresenter))]
     public SettingsWindow()
     {
         this.InitializeComponent();
@@ -53,7 +54,7 @@ public sealed partial class SettingsWindow : Window
 
             int min = (int)(500 * dpi / 96.0f);
 
-            OverlappedPresenter presenter = AppWindow.Presenter.As<OverlappedPresenter>();
+            OverlappedPresenter presenter = (OverlappedPresenter)AppWindow.Presenter;
             presenter.PreferredMinimumWidth = presenter.PreferredMinimumHeight = min;
 
             AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));

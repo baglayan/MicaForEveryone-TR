@@ -75,6 +75,7 @@ public sealed unsafe class MainAppService
         SetForegroundWindow(hwnd);
     }
 
+    [DynamicWindowsRuntimeCast(typeof(Window))]
     private void _window_Closed(object sender, Microsoft.UI.Xaml.WindowEventArgs args)
     {
         ((Microsoft.UI.Xaml.Window)sender).Closed -= _window_Closed;
@@ -88,6 +89,7 @@ public sealed unsafe class MainAppService
     }
 
     [UnmanagedCallersOnly]
+    [DynamicWindowsRuntimeCast(typeof(MenuFlyout))]
     private static LRESULT WindowProc(HWND hWnd, uint Msg, WPARAM wParam, LPARAM lParam)
     {
         switch (Msg)
@@ -172,7 +174,7 @@ public sealed unsafe class MainAppService
                             );
 
                             var page = (TrayIconPage)(appService._source!.Content);
-                            page.ContextFlyout.As<MenuFlyout>().ShowAt(page, point);
+                            ((MenuFlyout)page.ContextFlyout).ShowAt(page, point);
                             break;
 
                         case NIN_SELECT:

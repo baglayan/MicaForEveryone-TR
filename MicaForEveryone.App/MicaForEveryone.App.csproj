@@ -32,6 +32,7 @@
 		<CsWinRTRcwFactoryFallbackGeneratorForceOptOut>true</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
 		<WarnAsError>CsWinRT1028;CsWinRT1029</WarnAsError>
 		<CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
+    <CsWinRTAotWarningLevel>3</CsWinRTAotWarningLevel>
 		
 		<!-- Enable size inspection using sizoscope -->
 		<IlcGenerateMstatFile>true</IlcGenerateMstatFile>
@@ -62,7 +63,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.250402" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
 		<PackageReference Include="Dongle.TrustedSigning" Version="1.0.61" />
-		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.0-prerelease.250720.1" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3240.44" IncludeAssets="none" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
 		<Manifest Include="$(ApplicationManifest)" />

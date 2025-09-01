@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI;
+using WinRT;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,6 +33,8 @@ namespace MicaForEveryone.App.Controls
             DefaultStyleKey = typeof(CustomColorPicker);
         }
 
+        [DynamicWindowsRuntimeCast(typeof(ColorPicker))]
+        [DynamicWindowsRuntimeCast(typeof(Button))]
         protected override void OnApplyTemplate()
         {
             picker = (ColorPicker)GetTemplateChild("Picker");

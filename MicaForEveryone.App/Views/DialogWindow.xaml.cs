@@ -17,6 +17,7 @@ namespace MicaForEveryone.App.Views
     {
         private TaskCompletionSource<ContentDialogResult> _tcs = new();
 
+        [DynamicWindowsRuntimeCast(typeof(OverlappedPresenter))]
         public DialogWindow(string title, string message)
         {
             InitializeComponent();
@@ -29,7 +30,7 @@ namespace MicaForEveryone.App.Views
             var dpi = TerraFX.Interop.Windows.Windows.GetDpiForWindow((TerraFX.Interop.Windows.HWND)WindowNative.GetWindowHandle(this));
             var scale = dpi / 96.0f;
 
-            OverlappedPresenter presenter = AppWindow.Presenter.As<OverlappedPresenter>();
+            OverlappedPresenter presenter = ((OverlappedPresenter)AppWindow.Presenter);
             presenter.IsResizable = presenter.IsMinimizable = presenter.IsMaximizable = false;
             AppWindow.ResizeClient(new Windows.Graphics.SizeInt32((int)(480 * scale), (int)(196 * scale)));
 
