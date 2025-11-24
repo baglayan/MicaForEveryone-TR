@@ -13,21 +13,19 @@ namespace MicaForEveryone.App;
 class Program
 {
     [STAThread]
-    public static async Task Main(string[] _)
+    public static void Main(string[] _)
     {
         ComWrappersSupport.InitializeComWrappers();
 
-        bool isRedirect = await DecideRedirectionAsync();
-        if (!isRedirect)
-        {
+        if (DecideRedirectionAsync().Result == true)
+            return;
 
-            Microsoft.UI.Xaml.Application.Start((p) =>
-            {
-                var context = new MicaForEveryone.App.Dispatching.DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
-                SynchronizationContext.SetSynchronizationContext(context);
-                new App();
-            });
-        }
+        Microsoft.UI.Xaml.Application.Start((p) =>
+        {
+            var context = new MicaForEveryone.App.Dispatching.DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
+            SynchronizationContext.SetSynchronizationContext(context);
+            new App();
+        });
     }
 
     private static async Task<bool> DecideRedirectionAsync()

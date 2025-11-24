@@ -109,14 +109,14 @@ public sealed class RuleService : IRuleService
     [UnmanagedCallersOnly]
     private static void NewWindowShown(HWINEVENTHOOK handler, uint winEvent, HWND hWnd, int idObject, int idChild, uint idEventThread, uint dwmsEventTime)
     {
-        async Task NewWindowShowHandlerAsync(IRuleService service, HWND hwnd)
+        static async Task NewWindowShowHandlerAsync(IRuleService service, HWND hwnd)
         {
             if (!IsWindowEligible(hwnd))
                 await Task.Delay(10);
             await service.ApplyRuleToWindowAsync(hwnd);
         }
 
-        _ = NewWindowShowHandlerAsync(App.Services.GetRequiredService<IRuleService>(), hWnd);
+        _ = NewWindowShowHandlerAsync(App.Services.GetRequiredService<IRuleService>(), hWnd).ConfigureAwait(false);
     }
 
     private void CallEnumWindows()

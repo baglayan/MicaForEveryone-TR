@@ -1,3 +1,5 @@
+using MicaForEveryone.App.Controls.Navigation;
+using MicaForEveryone.App.Services;
 using MicaForEveryone.App.ViewModels;
 using MicaForEveryone.CoreUI;
 using MicaForEveryone.Models;
@@ -23,24 +25,17 @@ namespace MicaForEveryone.App.Views;
 /// </summary>
 public sealed partial class SettingsWindow : Window
 {
-    private SettingsViewModel ViewModel { get; }
-
-    private ILocalizationService LocalizationService { get; }
-
-    [DynamicWindowsRuntimeCast(typeof(OverlappedPresenter))]
     public SettingsWindow()
     {
         this.InitializeComponent();
 
-        ViewModel = App.Services.GetRequiredService<SettingsViewModel>();
-        LocalizationService = App.Services.GetRequiredService<ILocalizationService>();
+        var LocalizationService = App.Services.GetRequiredService<ILocalizationService>();
 
         ExtendsContentIntoTitleBar = true;
         AppWindow.TitleBar.ButtonBackgroundColor = AppWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         ChangeButtonBackground();
         Title = LocalizationService.GetLocalizedString("SettingsWindowTitle");
         AppWindow.SetIcon("Assets\\MicaForEveryone.ico");
-        SetTitleBar(TitleBarControl);
 
         unsafe
         {
@@ -88,53 +83,14 @@ public sealed partial class SettingsWindow : Window
             }
             return result;
         }
-        /*
-        if (arg2 == WM.WM_GETMINMAXINFO)
+        if (arg2 == WM.WM_NCDESTROY)
         {
-            var dpi = GetDpiForWindow(hWND);
-            float scale = dpi / 96.0f;
-            MINMAXINFO* minMaxInfo = (MINMAXINFO*)lPARAM;
-            minMaxInfo->ptMinTrackSize.x = (int)(500 * scale);
-            minMaxInfo->ptMinTrackSize.y = (int)(500 * scale);
+            RemoveWindowSubclass(hWND, &WindowProc, 0);
         }
-        */
         return DefSubclassProc(hWND, arg2, wPARAM, lPARAM);
     }
 
-    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-    {
-    }
-
-    private void NavigationViewControl_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-    {
-        if (args.SelectedItem is Rule rule)
-        {
-            _contentFrame.Navigate(typeof(RuleSettingsPage), rule);
-        }
-        else
-        {
-            _contentFrame.Navigate(typeof(AppSettingsPage));
-        }
-    }
-
-    private void Window_Activated(object sender, WindowActivatedEventArgs args)
-    {
-        /*
-        if (args.WindowActivationState == WindowActivationState.Deactivated)
-        {
-            try
-            {
-                // This may cause an exception on closing, not sure why.
-                VisualStateManager.GoToState(RootPage, "TitleBarInactivated", false);
-            }
-            catch { }
-        }
-        else
-        {
-            VisualStateManager.GoToState(RootPage, "TitleBarActive", false);
-        }
-        */
-    }
+    
 
     private void ChangeButtonBackground()
     {
@@ -159,48 +115,8 @@ public sealed partial class SettingsWindow : Window
 
     private void Window_Closed(object sender, WindowEventArgs args)
     {
-        Activated -= Window_Activated;
-    }
-
-    private void TitleBarControl_PaneToggleRequested(TitleBar sender, object args)
-    {
-        NavigationViewControl.IsPaneOpen = !NavigationViewControl.IsPaneOpen;
-    }
-}
-
-public sealed class AddNewRuleMenuItem;
-
-public sealed class AppSettingsMenuItem;
-
-public sealed partial class SettingsNavigationItemSelector : DataTemplateSelector
-{
-    public DataTemplate GlobalRuleTemplate { get; set; } = new();
-
-    public DataTemplate ProcessRuleTemplate { get; set; } = new();
-
-    public DataTemplate ClassRuleTemplate { get; set; } = new();
-
-    public DataTemplate AddNewRuleTemplate { get; set; } = new();
-
-    public DataTemplate AppSettingsTemplate { get; set; } = new();
-
-    protected override DataTemplate SelectTemplateCore(object item)
-    {
-        if (item is GlobalRule)
-            return GlobalRuleTemplate;
-
-        if (item is ProcessRule)
-            return ProcessRuleTemplate;
-
-        if (item is ClassRule)
-            return ClassRuleTemplate;
-
-        if (item is AddNewRuleMenuItem)
-            return AddNewRuleTemplate;
-
-        if (item is AppSettingsMenuItem)
-            return AppSettingsTemplate;
-
-        throw new ArgumentException("Navigation menu item type is invalid.");
+        Closed -= Window_Closed;
+        RootPage.ActualThemeChanged -= RootPage_ActualThemeChanged;
+        RootPage.SizeChanged -= RootPage_SizeChanged;
     }
 }

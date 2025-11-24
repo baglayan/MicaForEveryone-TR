@@ -9,6 +9,8 @@
     xmlns:helpers="using:MicaForEveryone.App.Helpers"
     xmlns:labs="using:CommunityToolkit.WinUI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    NavigationCacheMode="Disabled"
+    Unloaded="Page_Unloaded"
     mc:Ignorable="d">
 
     <controls:SettingsPageControl x:Uid="AppSettingsPage">

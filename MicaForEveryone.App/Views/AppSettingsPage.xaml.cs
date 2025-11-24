@@ -49,4 +49,13 @@ public sealed partial class AppSettingsPage : Page
     {
         _ = SettingsService.SaveAsync();
     }
+
+    private void Page_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        Unloaded -= Page_Unloaded;
+        StartupToggle.Toggled -= StartupToggle_Toggled;
+        TelemetryToggle.Toggled -= TelemetryToggle_Toggled;
+
+        Bindings?.StopTracking();
+    }
 }

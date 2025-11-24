@@ -9,6 +9,7 @@
     <Application.Resources>
         <XamlControlsResources>
             <XamlControlsResources.MergedDictionaries>
+                <ResourceDictionary Source="/Controls/Navigation/NavigationView.xaml" />
                 <ResourceDictionary Source="/Controls/SettingsPageControl.xaml" />
                 <ResourceDictionary Source="/Controls/WindowPickerButton.xaml" />
                 <controls:CustomColorPickerTemplate />

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System;
 using System.Runtime.CompilerServices;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,9 +26,22 @@ public sealed partial class RuleSettingsPage : Page
     {
         this.InitializeComponent();
 
+        Unloaded += RuleSettingsPage_Unloaded;
+
         RuleService = App.Services.GetRequiredService<IRuleService>();
         SettingsService = App.Services.GetRequiredService<ISettingsService>();
         LocalizationService = App.Services.GetRequiredService<ILocalizationService>();
+    }
+
+    private void RuleSettingsPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        Unloaded -= RuleSettingsPage_Unloaded;
+        Rule!.PropertyChanged -= Rule_PropertyChanged;
+        RemoveCard?.Click -= SettingsCard_Click;
+        CustomColorPicker.CancelButtonClicked -= TitleBarCustomColorPicker_ButtonClicked;
+        CustomColorPicker.OkButtonClicked -= TitleBarCustomColorPicker_ButtonClicked;
+        Bindings?.StopTracking();
+        RemoveCard?.IsClickEnabled = false;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -35,12 +49,6 @@ public sealed partial class RuleSettingsPage : Page
         Rule = Unsafe.As<Rule>(e.Parameter);
         Rule.PropertyChanged += Rule_PropertyChanged;
         base.OnNavigatedTo(e);
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        Rule!.PropertyChanged -= Rule_PropertyChanged;
-        base.OnNavigatedFrom(e);
     }
 
     private void Rule_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -64,9 +72,9 @@ public sealed partial class RuleSettingsPage : Page
         return App.Services.GetRequiredService<ILocalizationService>().GetLocalizedCornerPreference(cornerPreference);
     }
 
-    public static Visibility NotGlobalRuleVisibility(Rule rule)
+    public static bool IsNotGlobalRule(Rule rule)
     {
-        return rule is GlobalRule ? Visibility.Collapsed : Visibility.Visible;
+        return !(rule is GlobalRule);
     }
 
     private void SettingsCard_Click(object sender, RoutedEventArgs e)

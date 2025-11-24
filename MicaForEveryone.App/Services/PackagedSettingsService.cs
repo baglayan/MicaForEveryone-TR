@@ -1,5 +1,4 @@
-﻿using MicaForEveryone.App.Helpers;
-using MicaForEveryone.CoreUI;
+﻿using MicaForEveryone.CoreUI;
 using MicaForEveryone.Models;
 using System;
 using System.ComponentModel;
@@ -9,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.Storage;
 
 namespace MicaForEveryone.App.Services;
@@ -34,9 +34,7 @@ public sealed partial class PackagedSettingsService : ISettingsService
 
     private const string SettingsFileName = "settings.json";
 
-    private StorageFile? settingsFile;
-
-    private WinRTFileSystemWatcher? watcher;
+    private FileSystemWatcher? watcher;
 
     private bool recentWriteDueToApp = false;
 
@@ -51,18 +49,22 @@ public sealed partial class PackagedSettingsService : ISettingsService
 
     public async Task InitializeAsync()
     {
-        var folder = Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalFolder;
-        var file = await folder.TryGetItemAsync(SettingsFileName);
-        if (file is null)
+        var folder = Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalPath;
+        Stream stream;
+        try
         {
-            StorageFile defaultFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///Assets/default.json"));
-            await defaultFile.CopyAsync(folder, SettingsFileName);
+            stream = new FileStream($"{folder}\\{SettingsFileName}", FileMode.Open, FileAccess.Read);
         }
-        settingsFile = await folder.GetFileAsync(SettingsFileName);
-        using Stream settingsStream = await settingsFile.OpenStreamForReadAsync();
-        Settings = await JsonSerializer.DeserializeAsync(settingsStream, MFESerializerContext.Default.SettingsFileModel);
-        watcher = new(folder, WinRTFileSystemWatcher.NotifyFilters.FileName | WinRTFileSystemWatcher.NotifyFilters.LastWrite | WinRTFileSystemWatcher.NotifyFilters.Size, false);
+        catch
+        {
+            File.Copy($"{Package.Current.InstalledPath}\\Assets\\default.json", $"{folder}\\{SettingsFileName}", true);
+            stream = new FileStream($"{Package.Current.InstalledPath}\\Assets\\default.json", FileMode.Open, FileAccess.Read);
+        }
+        Settings = await JsonSerializer.DeserializeAsync(stream, MFESerializerContext.Default.SettingsFileModel);
+        stream.Close();
+        watcher = new FileSystemWatcher(folder);
         watcher.Changed += Watcher_Changed;
+        watcher.EnableRaisingEvents = true;
     }
 
     public async Task OpenConfigurationFileAsync()
@@ -71,9 +73,9 @@ public sealed partial class PackagedSettingsService : ISettingsService
         await Windows.System.Launcher.LaunchFileAsync(file);
     }
 
-    private void Watcher_Changed(WinRTFileSystemWatcher watcher, WinRTFileSystemWatcher.FileAction action, string fileName)
+    private void Watcher_Changed(object sender, FileSystemEventArgs args)
     {
-        _ = WatcherChangedAsync(fileName);
+        _ = WatcherChangedAsync(args.Name!);
     }
 
     private async Task WatcherChangedAsync(string name)
@@ -97,7 +99,7 @@ public sealed partial class PackagedSettingsService : ISettingsService
         await _dispatching.YieldAsync();
 
         // TODO: Finish this
-        using (Stream settingsStream = await settingsFile!.OpenStreamForReadAsync())
+        using (Stream settingsStream = new FileStream($"{Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalPath}\\{SettingsFileName}", FileMode.Open, FileAccess.Read))
         {
             Settings = await JsonSerializer.DeserializeAsync(settingsStream, MFESerializerContext.Default.SettingsFileModel);
         }
@@ -109,7 +111,7 @@ RELEASE_SEMAPHORE:
 
     public async Task SaveAsync()
     {
-        using (Stream settingsStream = (await settingsFile!.OpenAsync(FileAccessMode.ReadWrite, StorageOpenOptions.AllowOnlyReaders)).AsStreamForWrite())
+        using (Stream settingsStream = new FileStream($"{Microsoft.Windows.Storage.ApplicationData.GetDefault().LocalPath}\\{SettingsFileName}", FileMode.Open, FileAccess.Write))
         {
             recentWriteDueToApp = true;
             settingsStream.SetLength(0);
@@ -125,7 +127,4 @@ RELEASE_SEMAPHORE:
 
 [JsonSerializable(typeof(SettingsFileModel))]
 [JsonSourceGenerationOptions(WriteIndented = false, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true)]
-partial class MFESerializerContext : JsonSerializerContext
-{
-
-}
+partial class MFESerializerContext : JsonSerializerContext;

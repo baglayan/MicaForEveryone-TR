@@ -37,7 +37,12 @@ public sealed partial class AddProcessRuleContentDialog : ContentDialog
         {
             return;
         }
-        Process proc = Process.GetProcessById((int)procId);
-        ViewModel.ProcessName = proc.ProcessName;
+
+        try
+        {
+            Process proc = Process.GetProcessById((int)procId);
+            ViewModel.ProcessName = proc.ProcessName;
+        }
+        catch { }
     }
 }

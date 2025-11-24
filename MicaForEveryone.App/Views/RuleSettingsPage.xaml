@@ -10,7 +10,7 @@
     xmlns:local="using:MicaForEveryone.App.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:MicaForEveryone.Models"
-    x:Name="ThisPage"
+    NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
     <controls:SettingsPageControl Header="{x:Bind LocalizationService.GetRuleName(Rule)}">
@@ -55,6 +55,7 @@
                     <DropDownButton.Flyout>
                         <Flyout x:Name="TitleBarColorPickerFlyout" ShouldConstrainToRootBounds="False">
                             <controls:CustomColorPicker
+                                x:Name="CustomColorPicker"
                                 CancelButtonClicked="TitleBarCustomColorPicker_ButtonClicked"
                                 OkButtonClicked="TitleBarCustomColorPicker_ButtonClicked"
                                 SelectedColor="{x:Bind Rule.TitleBarColorCode, Converter={StaticResource ColorConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -126,14 +127,16 @@
 
             <TextBlock
                 x:Uid="RemoveLabel"
+                x:Name="RemoveLabel"
                 Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"
-                Visibility="{x:Bind local:RuleSettingsPage.NotGlobalRuleVisibility(Rule)}" />
+                x:Load="{x:Bind local:RuleSettingsPage.IsNotGlobalRule(Rule)}" />
             <ct:SettingsCard
                 x:Uid="RemoveCard"
                 Click="SettingsCard_Click"
                 HeaderIcon="Delete"
                 IsClickEnabled="True"
-                Visibility="{x:Bind local:RuleSettingsPage.NotGlobalRuleVisibility(Rule)}" />
+                x:Name="RemoveCard"
+                x:Load="{x:Bind local:RuleSettingsPage.IsNotGlobalRule(Rule)}" />
         </StackPanel>
     </controls:SettingsPageControl>
 </Page>
