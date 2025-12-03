@@ -79,7 +79,7 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build -a ${{ matrix.architecture }} -c ${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
+        run: dotnet build /p Platform=${{ matrix.architecture }} -c ${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
       - name: Copy build binaries
         run: |
           Get-ChildItem -Path . -Recurse -Filter *.msix |
