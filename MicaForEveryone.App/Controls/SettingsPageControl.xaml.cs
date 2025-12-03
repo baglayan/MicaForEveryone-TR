@@ -17,8 +17,7 @@ namespace MicaForEveryone.App.Controls;
 
 public sealed partial class SettingsPageControl : ContentControl
 {
-    public static DependencyProperty HeaderProperty { get; } =
-        DependencyProperty.Register("Header", typeof(string), typeof(SettingsPageControl), new(null));
+    public static readonly DependencyProperty HeaderProperty = DependencyProperty.Register("Header", typeof(string), typeof(SettingsPageControl), new(null));
 
     public string Header
     {

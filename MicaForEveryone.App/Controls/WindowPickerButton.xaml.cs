@@ -14,7 +14,7 @@ public sealed partial class WindowPickerButton : Button
 {
     private bool capturing = false;
 
-    public static DependencyProperty WindowProperty = DependencyProperty.Register(nameof(Window), typeof(HWND), typeof(WindowPickerButton), new PropertyMetadata(null));
+    public static readonly DependencyProperty WindowProperty = DependencyProperty.Register(nameof(Window), typeof(HWND), typeof(WindowPickerButton), new PropertyMetadata(HWND.NULL));
 
     public event WindowPickerButtonWindowChangedHandler? WindowChanged;
 

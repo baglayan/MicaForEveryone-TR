@@ -10,7 +10,7 @@ namespace MicaForEveryone.App.Controls
 {
     public sealed partial class CustomColorPicker : Control
     {
-        public static DependencyProperty SelectedColorProperty =
+        public static readonly DependencyProperty SelectedColorProperty =
             DependencyProperty.Register(
                 "SelectedColor",
                 typeof(Color),

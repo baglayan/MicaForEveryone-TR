@@ -4,7 +4,7 @@
 		<!-- Built-in -->
 		
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<RootNamespace>MicaForEveryone.App</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -41,6 +41,7 @@
 
 		<!-- False positives -->
 		<NoWarn>$(NoWarn);WMC1506</NoWarn>
+    <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
 
 		<!-- Versioning -->
 		<Version>2.0.6.0</Version>
@@ -58,15 +59,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Labs.Extensions.DependencyInjection" Version="0.1.250829-build.2245" />
-		<PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" Version="0.1.250829-build.2245" />
+		<PackageReference Include="CommunityToolkit.Labs.Extensions.DependencyInjection" Version="0.1.251101-build.2372" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.DependencyPropertyGenerator" Version="0.1.251101-build.2372" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.250402" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.250402" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
 		<PackageReference Include="Dongle.TrustedSigning" Version="1.0.61" />
-		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.0-prerelease.250720.1" />
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.0-prerelease.251115.2" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3240.44" IncludeAssets="none" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 

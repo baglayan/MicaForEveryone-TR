@@ -25,6 +25,7 @@ namespace MicaForEveryone.App.Views;
 /// </summary>
 public sealed partial class SettingsWindow : Window
 {
+    [DynamicWindowsRuntimeCast(typeof(OverlappedPresenter))]
     public SettingsWindow()
     {
         this.InitializeComponent();
