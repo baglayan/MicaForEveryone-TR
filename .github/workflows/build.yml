@@ -41,8 +41,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
       - name: Change package identity
         run: |
           $manifestPath = "MicaForEveryone.App\Package.appxmanifest"
@@ -79,9 +77,9 @@ jobs:
           }
           $xml.Save($xmlPath)
       - name: Restore
-        run: msbuild /t:Restore
+        run: dotnet restore
       - name: Build
-        run: msbuild /t:Build /p:Platform=${{ matrix.architecture }} /p:Configuration=${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
+        run: dotnet build -a ${{ matrix.architecture }} -c ${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
       - name: Copy build binaries
         run: |
           Get-ChildItem -Path . -Recurse -Filter *.msix |
@@ -165,14 +163,12 @@ jobs:
           $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
           $version=$identity.Node.Version
           Write-Output "version=$version" >> $env:GITHUB_OUTPUT
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
       - name: Restore
-        run: msbuild /t:Restore
+        run: dotnet restore
       - name: Get makeappx path
         id: getmakeappx
         run: |
-          $path = msbuild MicaForEveryone.App\MicaForEveryone.App.csproj -getProperty:MakeAppxExeFullPath
+          $path = dotnet msbuild MicaForEveryone.App\MicaForEveryone.App.csproj -getProperty:MakeAppxExeFullPath
           Write-Output "makeappxpath=$path" >> $env:GITHUB_OUTPUT
       - name: Build bundle
         run: >-
