@@ -133,6 +133,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install nuget.exe
+        uses: NuGet/setup-nuget@v2
+
+      - name: Download build tools
+        runs: |
+          mkdir tools
+          Invoke-WebRequest -Uri https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.BuildTools/10.0.26100.7175 -OutFile tools\buildtools.nupkg
+          Expand-Archive -Path tools\buildtools.nupkg -DestinationPath tools\extracted
+
       - name: Find binary artifacts
         id: getartifactids
         env:
@@ -150,12 +160,14 @@ jobs:
           $csvIds = ($matchingIds -join ",")
           Write-Output "Matching artifact IDs: $csvIds"
           Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
+
       - name: Download binary artifacts
         uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ steps.getartifactids.outputs.artifact_ids }}
           path: ${{ github.workspace }}/BundleArtifacts
           merge-multiple: true
+
       - name: Extract bundle version
         id: getbundlever
         run: |
@@ -163,16 +175,11 @@ jobs:
           $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
           $version=$identity.Node.Version
           Write-Output "version=$version" >> $env:GITHUB_OUTPUT
-      - name: Restore
-        run: dotnet restore
-      - name: Get makeappx path
-        id: getmakeappx
-        run: |
-          $path = dotnet msbuild MicaForEveryone.App\MicaForEveryone.App.csproj -getProperty:MakeAppxExeFullPath
-          Write-Output "makeappxpath=$path" >> $env:GITHUB_OUTPUT
+
       - name: Build bundle
         run: >-
-          & "${{ steps.getmakeappx.outputs.makeappxpath }}" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p "${{ github.workspace }}\bundle.msixbundle"
+          & "tools\extracted\bin\10.0.26100.0\x64\makeappx.exe" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p "${{ github.workspace }}\bundle.msixbundle"
+
       - name: Login to Azure
         uses: azure/login@v2
         if: github.ref_type == 'tag' && matrix.channel == 'AppInstaller'
@@ -180,6 +187,7 @@ jobs:
           client-id: ${{ secrets.TS_CLIENT_ID }}
           tenant-id: ${{ secrets.TS_TENANT_ID }}
           subscription-id: ${{ secrets.TS_SUBSCRIPTION_ID }}
+
       - name: Sign bundle
         if: matrix.channel == 'AppInstaller' && github.ref_type == 'tag'
         uses: Azure/trusted-signing-action@v0.5.9
@@ -188,11 +196,13 @@ jobs:
           trusted-signing-account-name: ${{ secrets.TS_ACCOUNT }}
           certificate-profile-name: ${{ secrets.TS_CERT }}
           files: ${{ github.workspace }}\bundle.msixbundle
+
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
           name: Binaries - ${{ matrix.channel }} - ${{ matrix.configuration }} - Bundle
           path: bundle.msixbundle
+
       - name: Delete architecture-specific artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
