@@ -138,7 +138,7 @@ jobs:
         uses: NuGet/setup-nuget@v2
 
       - name: Download build tools
-        runs: |
+        run: |
           mkdir tools
           Invoke-WebRequest -Uri https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.BuildTools/10.0.26100.7175 -OutFile tools\buildtools.nupkg
           Expand-Archive -Path tools\buildtools.nupkg -DestinationPath tools\extracted
