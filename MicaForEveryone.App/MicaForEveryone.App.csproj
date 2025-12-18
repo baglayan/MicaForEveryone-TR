@@ -28,6 +28,9 @@
 		<Nullable>enable</Nullable>
 		<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
 
+		<!-- Fix issue with missing languages -->
+		<AppxBundle>Never</AppxBundle>
+
 		<!-- C#/WinRT AOT compliance -->
 
 		<CsWinRTRcwFactoryFallbackGeneratorForceOptOut>true</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
