@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.System.Profile;
 
 namespace MicaForEveryone.App.Services;
@@ -58,6 +59,7 @@ public sealed partial class AppCenterLoggingService : ILoggingService
     public void LogException(Exception exception)
     {
         var version = _versionInfoService.GetVersion();
+        GetDeviceModel(out string? oemName, out string? model);
         _exceptions.Add(
             new LogInfo()
             {
@@ -75,7 +77,9 @@ public sealed partial class AppCenterLoggingService : ILoggingService
                     OsName = "WINDOWS",
                     OsVersion = GetOsVersion(),
                     SdkName = "appcenter.uwp",
-                    SdkVersion = "5.0.7"
+                    SdkVersion = "5.0.7",
+                    OemName = oemName,
+                    Model = model
                 },
                 Exception = ConvertExceptionToInfo(exception)
             });
@@ -88,6 +92,28 @@ public sealed partial class AppCenterLoggingService : ILoggingService
         ulong num3 = (num & 0xFFFF00000000L) >> 32;
         ulong num4 = (num & 0xFFFF0000u) >> 16;
         return $"{num2}.{num3}.{num4}";
+    }
+
+    private static void GetDeviceModel(out string? oemName, out string? model)
+    {
+        EasClientDeviceInformation deviceInfo = new();
+        string systemManufacturer = deviceInfo.SystemManufacturer;
+        if (!string.IsNullOrEmpty(systemManufacturer) && systemManufacturer != "System manufacturer")
+            oemName = systemManufacturer;
+        else
+            oemName = null;
+
+        string productName = deviceInfo.SystemProductName;
+        if (string.IsNullOrEmpty(productName) || productName == "System Product Name")
+        {
+            string sku = deviceInfo.SystemSku;
+            if (!string.IsNullOrEmpty(sku) && sku != "System SKU")
+                model = sku;
+            else
+                model = null;
+        }
+        else
+            model = productName;
     }
 
     private static unsafe string GetLocale()
@@ -180,6 +206,8 @@ public sealed partial class AppCenterLoggingService : ILoggingService
         public required string OsVersion { get; set; }
 
         public string? Model { get; set; }
+
+        public string? OemName { get; set; }
 
         public required string Locale { get; set; }
 
