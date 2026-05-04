@@ -3,6 +3,12 @@
 </p>
 <h1 align="center">Mica For Everyone!</h1>
 
+> [!CAUTION]
+>
+> **PHISHING ALERT!** The website micaforeveryone[.]com is **NOT AFFILIATED WITH THE MICA FOR EVERYONE MAINTAINERS**,
+> and appears to redirect users to sketchy download sites. The `MicaForEveryone/MicaForEveryone`
+> GitHub repository and Microsoft Store are the **ONLY** official download sources and project page for Mica For Everyone.
+
 **Mica For Everyone** is a tool to customize system backdrop on Win32 apps using [DwmSetWindowAttribute](https://docs.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute) and other methods.
 It can apply Mica (or any other backdrop materials) on the non-client area (window frame) or background of supported apps and its behavior is customizable through a GUI and a config file.
 
