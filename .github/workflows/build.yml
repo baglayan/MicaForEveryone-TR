@@ -87,7 +87,7 @@ jobs:
           }
       - name: Dumping
         run: |
-          Get-ChildItem -Path . -Include ("*.msixupload", "*.msixbundle", "*.appxsym") |
+          Get-ChildItem -Path . -Include ("*.msixupload", "*.msixbundle", "*.appxsym")
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
