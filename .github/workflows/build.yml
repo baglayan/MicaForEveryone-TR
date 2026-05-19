@@ -88,7 +88,7 @@ jobs:
         with:
           name: ${{ matrix.channel == 'Store' && 'StorePackage' || 'AppInstallerPackage' }}
           path: |
-            *.msixupload
-            *.msixbundle
-            *.appxsym
+            **/AppPackages/*.msixupload
+            **/AppPackages/**/*.msixbundle
+            **/AppPackages/**/*.appxsym
           archive: ${{ matrix.channel != 'Store' }}
