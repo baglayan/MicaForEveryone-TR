@@ -8,7 +8,7 @@ on:
     branches: [ "reset-winui3" ]
     
 jobs:
-  build-architectures:
+  build:
     runs-on: windows-latest
 
     permissions:
@@ -16,11 +16,7 @@ jobs:
     
     strategy:
       matrix:
-        architecture: [x64, x86, arm64]
-        configuration: [Debug, Release]
         channel: [AppInstaller, Store]
-        release:
-          - ${{ github.ref_type == 'tag' }}
         include:
           - channel: AppInstaller
             publisher:
@@ -32,15 +28,12 @@ jobs:
               "CN=95B8F56A-76FA-4743-83B0-5312C49D625D"
             pkgName:
               "DongleInsovaki.MicaForEveryone"
-        exclude:
-          - release: true
-            configuration: Debug
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v5
       - name: Change package identity
         run: |
           $manifestPath = "MicaForEveryone.App\Package.appxmanifest"
@@ -51,7 +44,7 @@ jobs:
 
           $manifest.Save($manifestPath)
       - name: Login to Azure
-        uses: azure/login@v2
+        uses: azure/login@v3
         if: github.ref_type == 'tag'
         with:
           client-id: ${{ secrets.TS_CLIENT_ID }}
@@ -79,222 +72,18 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build /p Platform=${{ matrix.architecture }} -c ${{ matrix.configuration }} /p:GenerateAppxPackageOnBuild=true /p:PublishAot=${{ matrix.configuration == 'Debug' && 'false' || 'true' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json"
+        run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
       - name: Copy build binaries
         run: |
-          Get-ChildItem -Path . -Recurse -Filter *.msix |
+          Get-ChildItem -Path . -Recurse -Include (${{ matrix.channel == 'Store' && '*.msixupload' || "'*.msixbundle' , '*.appxsym'" }}) |
           Where-Object { $_.FullName -notmatch '\\Dependencies\\' } |
           ForEach-Object {
             Copy-Item -Path $_.FullName -Destination . -Force
           }
-      - name: Copy build symbols
-        if: ${{ matrix.channel == 'Store' }}
-        run: |
-          $folderSearch = "${{ matrix.configuration == 'Release' && '\\native\\' || '' }}"
-          Get-ChildItem -Path . -Recurse -Filter *.pdb |
-          Where-Object { $_.FullName -match $folderSearch } |
-          ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination . -Force
-          }
-      - name: Produce appxsym
-        if: ${{ matrix.channel == 'Store' }}
-        run: Compress-Archive -Path *.pdb -DestinationPath MicaForEveryone_${{ matrix.configuration }}_${{ matrix.architecture }}.appxsym
-      - name: Upload build binaries
-        uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
         with:
-          name: Binaries - ${{ matrix.channel }} - ${{ matrix.configuration }} - ${{ matrix.architecture }}
-          path: "*.msix"
-      - name: Upload build symbols
-        if: ${{ matrix.channel == 'Store' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: Symbols - ${{ matrix.configuration }} - ${{ matrix.architecture }}
-          path: MicaForEveryone_${{ matrix.configuration }}_${{ matrix.architecture }}.appxsym
-
-  bundle:
-    runs-on: windows-latest
-
-    needs: [build-architectures]
-
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-        channel: [AppInstaller, Store]
-        release:
-          - ${{ github.ref_type == 'tag' }}
-        exclude:
-          - release: true
-            configuration: Debug
-    
-    permissions:
-      actions: write
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install nuget.exe
-        uses: NuGet/setup-nuget@v2
-
-      - name: Download build tools
-        run: |
-          mkdir tools
-          Invoke-WebRequest -Uri https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.BuildTools/10.0.26100.7175 -OutFile tools\buildtools.nupkg
-          Expand-Archive -Path tools\buildtools.nupkg -DestinationPath tools\extracted
-
-      - name: Find binary artifacts
-        id: getartifactids
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $configuration = "${{ matrix.configuration }}"
-          $channel = "${{ matrix.channel }}"
-          $runId = "${{ github.run_id }}"
-          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
-
-          $matchingIds = $artifactsJson.artifacts `
-            | Where-Object { $_.name -like "Binaries - $channel - $configuration - *" } `
-            | ForEach-Object { $_.id }
-
-          $csvIds = ($matchingIds -join ",")
-          Write-Output "Matching artifact IDs: $csvIds"
-          Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
-
-      - name: Download binary artifacts
-        uses: actions/download-artifact@v4
-        with:
-          artifact-ids: ${{ steps.getartifactids.outputs.artifact_ids }}
-          path: ${{ github.workspace }}/BundleArtifacts
-          merge-multiple: true
-
-      - name: Extract bundle version
-        id: getbundlever
-        run: |
-          $ns = @{ "ns" = "http://schemas.microsoft.com/appx/manifest/foundation/windows10" }
-          $identity = Select-Xml -Path ${{ github.workspace }}/MicaForEveryone.App/Package.appxmanifest -Namespace $ns -XPath "/ns:Package/ns:Identity"
-          $version=$identity.Node.Version
-          Write-Output "version=$version" >> $env:GITHUB_OUTPUT
-
-      - name: Build bundle
-        run: >-
-          & "tools\extracted\bin\10.0.26100.0\x64\makeappx.exe" bundle /v /d "${{ github.workspace }}/BundleArtifacts" /bv ${{ steps.getbundlever.outputs.version }} /p "${{ github.workspace }}\bundle.msixbundle"
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        if: github.ref_type == 'tag' && matrix.channel == 'AppInstaller'
-        with:
-          client-id: ${{ secrets.TS_CLIENT_ID }}
-          tenant-id: ${{ secrets.TS_TENANT_ID }}
-          subscription-id: ${{ secrets.TS_SUBSCRIPTION_ID }}
-
-      - name: Sign bundle
-        if: matrix.channel == 'AppInstaller' && github.ref_type == 'tag'
-        uses: Azure/trusted-signing-action@v0.5.9
-        with:
-          endpoint: ${{ secrets.TS_ENDPOINT }}
-          trusted-signing-account-name: ${{ secrets.TS_ACCOUNT }}
-          certificate-profile-name: ${{ secrets.TS_CERT }}
-          files: ${{ github.workspace }}\bundle.msixbundle
-
-      - name: Upload bundle artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Binaries - ${{ matrix.channel }} - ${{ matrix.configuration }} - Bundle
-          path: bundle.msixbundle
-
-      - name: Delete architecture-specific artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $csvIds = "${{ steps.getartifactids.outputs.artifact_ids }}"
-          $csvIds -split "," | ForEach-Object {
-            gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
-          }
-  
-  store-bundle:
-    runs-on: windows-latest
-
-    needs: [bundle]
-
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-        release:
-          - ${{ github.ref_type == 'tag' }}
-        exclude:
-          - release: true
-            configuration: Debug
-    
-    permissions:
-      actions: write
-    
-    steps:
-      - name: Find binary artifact
-        id: getbinaryartifactid
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $configuration = "${{ matrix.configuration }}"
-          $runId = "${{ github.run_id }}"
-          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
-
-          $matchingIds = $artifactsJson.artifacts `
-            | Where-Object { $_.name -like "Binaries - Store - $configuration - Bundle" } `
-            | ForEach-Object { $_.id }
-
-          if ($matchingIds.Count -eq 0) {
-            Write-Error "No matching artifact found for Binaries - Store - $configuration - Bundle"
-          } else {
-            $csvIds = ($matchingIds -join ",")
-            Write-Output "Matching artifact IDs: $csvIds"
-            Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
-          }
-      - name: Download binary artifact
-        uses: actions/download-artifact@v4
-        with:
-          artifact-ids: ${{ steps.getbinaryartifactid.outputs.artifact_ids }}
-          path: ${{ github.workspace }}
-          merge-multiple: true
-      - name: Find symbol artifacts
-        id: getartifactids
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $configuration = "${{ matrix.configuration }}"
-          $runId = "${{ github.run_id }}"
-          $artifactsJson = gh api repos/${{ github.repository }}/actions/runs/$runId/artifacts | ConvertFrom-Json
-
-          $matchingIds = $artifactsJson.artifacts `
-            | Where-Object { $_.name -like "Symbols - $configuration - *" } `
-            | ForEach-Object { $_.id }
-
-          $csvIds = ($matchingIds -join ",")
-          Write-Output "Matching artifact IDs: $csvIds"
-          Write-Output "artifact_ids=$csvIds" >> $env:GITHUB_OUTPUT
-      - name: Download symbol artifacts
-        uses: actions/download-artifact@v4
-        with:
-          artifact-ids: ${{ steps.getartifactids.outputs.artifact_ids }}
-          path: ${{ github.workspace }}
-          merge-multiple: true
-      - name: Merge into msixupload
-        run: |
-          $compress = @{
-            Path = "bundle.msixbundle", "*.appxsym"
-            DestinationPath = "MicaForEveryone_${{ matrix.configuration }}_Store.msixupload"
-          }
-          Compress-Archive @compress
-      - name: Upload msixupload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Binaries - Store - ${{ matrix.configuration }} - Upload
-          path: MicaForEveryone_${{ matrix.configuration }}_Store.msixupload
-      - name: Delete binary artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $csvIds = "${{ steps.getbinaryartifactid.outputs.artifact_ids }}"
-          $csvIds -split "," | ForEach-Object {
-            gh api "repos/${{ github.repository }}/actions/artifacts/$_" --method DELETE
-          }
+          name: ${{ matrix.channel == 'Store' && 'StorePackage' || 'AppInstallerPackage' }}
+          path: |
+            ${{ matrix.channel == 'Store' && '*.msixupload' || '*.msixbundle' }}
+            ${{ matrix.channel == 'Store' && '' || '*.appxsym' }}
