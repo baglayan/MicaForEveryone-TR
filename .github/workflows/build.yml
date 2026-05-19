@@ -75,7 +75,7 @@ jobs:
         run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
       - name: Copy build binaries
         run: |
-          Get-ChildItem -Path . -Recurse -Include (${{ matrix.channel == 'Store' && '*.msixupload' || "'*.msixbundle' , '*.appxsym'" }}) |
+          Get-ChildItem -Path . -Recurse -Include ("*.msixupload", "*.msixbundle", "*.appxsym") |
           Where-Object { $_.FullName -notmatch '\\Dependencies\\' } |
           ForEach-Object {
             Copy-Item -Path $_.FullName -Destination . -Force
