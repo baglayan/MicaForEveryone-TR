@@ -45,13 +45,13 @@ jobs:
           $manifest.Save($manifestPath)
       - name: Login to Azure
         uses: azure/login@v3
-        if: ${{ github.event_name == 'workflow_call' && inputs.release == 'true' }}
+        if: ${{ inputs.release }}
         with:
           client-id: ${{ secrets.TS_CLIENT_ID }}
           tenant-id: ${{ secrets.TS_TENANT_ID }}
           subscription-id: ${{ secrets.TS_SUBSCRIPTION_ID }}
       - name: Create Trusted Signing configuration
-        if: ${{ github.event_name == 'workflow_call' && inputs.release }}
+        if: ${{ inputs.release }}
         run: |
           $config = @{
             Endpoint = "${{ secrets.TS_ENDPOINT }}"
@@ -61,7 +61,7 @@ jobs:
           $json = $config | ConvertTo-Json
           $json | Out-File -FilePath "${{ github.workspace }}\trusted-signing.json"
       - name: Set App Center connection string
-        if: ${{ github.event_name == 'workflow_call' && inputs.release }}
+        if: ${{ inputs.release }}
         run: |
           $xmlPath = "${{ github.workspace}}\MicaForEveryone.App\appsettings.resw"
           [xml]$xml = Get-Content -Path $xmlPath
@@ -72,15 +72,44 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ (github.event_name == 'workflow_call' && inputs.release) && 'true' || 'false' }} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
+        run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ inputs.release && 'true' || 'false' }} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
       - name: Copy artifacts
         run: |
           $isStore = "${{ matrix.channel }}" -eq "Store"
           $extensions = if ($isStore) { (".msixupload") } else { (".msixbundle", ".appxsym") }
           $outputDir = "${{ github.workspace }}\output"
+          $appPackagesDir = Get-ChildItem -Path . -Directory -Recurse |
+            Where-Object { $_.Name -eq "AppPackages" } |
+            Select-Object -First 1
+
           New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-          Get-ChildItem -Path . -Recurse | Where-Object { $_.FullName -match '\\AppPackages\\' -and $_.Extension -in $extensions -and $_.FullName -notmatch '\\Dependencies\\' } | ForEach-Object {
-            Copy-Item -Path $_.FullName -Destination $outputDir
+
+          Get-ChildItem -Path $appPackagesDir -File -Recurse |
+            Where-Object { $_.Extension -in $extensions -and $_.FullName -notmatch '\\Dependencies\\' } |
+            ForEach-Object {
+              Copy-Item -Path $_ -Destination $outputDir
+            }
+
+          if (-not $isStore) {
+            $dependenciesDir = Get-ChildItem -Path $appPackagesDir -Directory -Recurse |
+              Where-Object { $_.Name -eq "Dependencies" } |
+              Select-Object -First 1
+
+            $dependencyOutputDir = Join-Path $outputDir "Dependencies"
+            New-Item -ItemType Directory -Path $dependencyOutputDir -Force | Out-Null
+
+            foreach ($arch in @("arm64", "x64", "x86")) {
+              $archDirectories = Get-ChildItem -Path $dependenciesDir -Directory -Recurse |
+                Where-Object { $_.Name -ieq $arch }
+
+              foreach ($archDirectory in $archDirectories) {
+                Get-ChildItem -Path $archDirectory -File -Filter "*.msix" | ForEach-Object {
+                  $destinationName = "{0}.{1}{2}" -f $_.BaseName, $arch, $_.Extension
+                  $destinationPath = Join-Path $dependencyOutputDir $destinationName
+                  Copy-Item -Path $_ -Destination $destinationPath -Force
+                }
+              }
+            }
           }
       - name: Upload artifact
         uses: actions/upload-artifact@v7
