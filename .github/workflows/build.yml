@@ -73,6 +73,9 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
+      - name: Delete sideload artifacts (for Store)
+        if: matrix.channel == 'Store'
+        run: Remove-Item -Path **\AppPackages\*_Test -Recurse -Force
       - name: Copy build binaries
         run: |
           Get-ChildItem -Path . -Recurse -Include ("*.msixupload", "*.msixbundle", "*.appxsym") |
@@ -85,5 +88,7 @@ jobs:
         with:
           name: ${{ matrix.channel == 'Store' && 'StorePackage' || 'AppInstallerPackage' }}
           path: |
-            ${{ matrix.channel == 'Store' && '*.msixupload' || '*.msixbundle' }}
-            ${{ matrix.channel == 'Store' && '' || '*.appxsym' }}
+            *.msixupload
+            *.msixbundle
+            *.appxsym
+          archive: ${{ matrix.channel != 'Store' }}
