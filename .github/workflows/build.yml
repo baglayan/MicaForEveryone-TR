@@ -79,7 +79,7 @@ jobs:
           $extensions = if ($isStore) { (".msixupload") } else { (".msixbundle", ".appxsym") }
           $outputDir = "${{ github.workspace }}\output"
           New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-          Get-ChildItem -Path "${{ github.workspace }}" -Include $extensions -Recurse | ForEach-Object {
+          Get-ChildItem -Path "${{ github.workspace }}" -Recurse | Where-Object { $_.Extension -in $extensions } | ForEach-Object {
             Copy-Item -Path $_.FullName -Destination $outputDir
           }
       - name: Upload artifact
