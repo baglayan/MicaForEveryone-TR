@@ -2,17 +2,18 @@ name: Build (WinUI 3)
 on:
   push:
     branches: [ "reset-winui3" ]
-    tags:
-      - '*'
   pull_request:
     branches: [ "reset-winui3" ]
+  workflow_call:
+    inputs:
+      release:
+        required: true
+        type: boolean
+    secrets: inherit
     
 jobs:
   build:
     runs-on: windows-latest
-
-    permissions:
-      id-token: write
     
     strategy:
       matrix:
@@ -45,13 +46,13 @@ jobs:
           $manifest.Save($manifestPath)
       - name: Login to Azure
         uses: azure/login@v3
-        if: github.ref_type == 'tag'
+        if: ${{ github.event_name == 'workflow_call' && on.workflow_call.release == 'true' }}
         with:
           client-id: ${{ secrets.TS_CLIENT_ID }}
           tenant-id: ${{ secrets.TS_TENANT_ID }}
           subscription-id: ${{ secrets.TS_SUBSCRIPTION_ID }}
       - name: Create Trusted Signing configuration
-        if: github.ref_type == 'tag'
+        if: ${{ github.event_name == 'workflow_call' && on.workflow_call.release == 'true' }}
         run: |
           $config = @{
             Endpoint = "${{ secrets.TS_ENDPOINT }}"
@@ -61,7 +62,7 @@ jobs:
           $json = $config | ConvertTo-Json
           $json | Out-File -FilePath "${{ github.workspace }}\trusted-signing.json"
       - name: Set App Center connection string
-        if: github.ref_type == 'tag'
+        if: ${{ github.event_name == 'workflow_call' && on.workflow_call.release == 'true' }}
         run: |
           $xmlPath = "${{ github.workspace}}\MicaForEveryone.App\appsettings.resw"
           [xml]$xml = Get-Content -Path $xmlPath
@@ -72,7 +73,7 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ github.ref_type == 'tag' && 'true' || 'false'}} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
+        run: dotnet build MicaForEveryone.App\MicaForEveryone.App.csproj /p:Platform=x64 -c Release /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=${{ matrix.channel == 'Store' && 'CI' || 'SideloadOnly' }} /p:TrustedSigningEnabled=${{ (github.event_name == 'workflow_call' && on.workflow_call.release == 'true') && 'true' || 'false' }} /p:TrustedSigningMetadataPath="${{ github.workspace }}\trusted-signing.json" --no-restore
       - name: Delete sideload artifacts (for Store)
         if: matrix.channel == 'Store'
         run: Remove-Item -Path **\AppPackages\*_Test -Recurse -Force
