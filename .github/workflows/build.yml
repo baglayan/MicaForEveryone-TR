@@ -76,7 +76,7 @@ jobs:
       - name: Copy artifacts
         run: |
           $isStore = "${{ matrix.channel }}" -eq "Store"
-          $extensions = if ($isStore) { (".msixupload") } else { (".msixbundle", ".appxsym", "*.appinstaller") }
+          $extensions = if ($isStore) { (".msixupload") } else { (".msixbundle", ".appxsym", ".appinstaller") }
           $outputDir = "${{ github.workspace }}\output"
           $appPackagesDir = Get-ChildItem -Path . -Directory -Recurse |
             Where-Object { $_.Name -eq "AppPackages" } |
