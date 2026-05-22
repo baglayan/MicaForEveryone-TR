@@ -20,58 +20,6 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: AppInstallerPackage
-      - name: Generate AppInstaller
-        run: |
-          $appInstallerPath = Get-ChildItem -Path . -Filter "*.appinstaller" -File | Select-Object -First 1
-          $msixbundlePath = Get-ChildItem -Path . -Filter "*.msixbundle" -File | Select-Object -First 1
-          if ($null -eq $appInstallerPath) {
-            throw "AppInstaller file not found."
-          }
-
-          if ($null -eq $msixbundlePath) {
-            throw "MSIX bundle file not found."
-          }
-
-          $releaseBaseUrl = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}"
-          $msixbundleFileName = $msixbundlePath.Name
-
-          [xml]$appInstallerXml = Get-Content -LiteralPath $appInstallerPath.FullName
-          $namespaceManager = New-Object System.Xml.XmlNamespaceManager($appInstallerXml.NameTable)
-          $namespaceManager.AddNamespace("ai", $appInstallerXml.DocumentElement.NamespaceURI)
-
-          $mainBundleNode = $appInstallerXml.SelectSingleNode("//ai:MainBundle", $namespaceManager)
-          if ($null -eq $mainBundleNode) {
-            throw "MainBundle node not found in AppInstaller file."
-          }
-
-          $mainBundleNode.SetAttribute("Uri", "$releaseBaseUrl/$msixbundleFileName")
-
-          $packageNodes = $appInstallerXml.SelectNodes("//ai:Dependencies/ai:Package", $namespaceManager)
-          foreach ($packageNode in $packageNodes) {
-            $packageName = $packageNode.GetAttribute("Name")
-            $processorArchitecture = $packageNode.GetAttribute("ProcessorArchitecture")
-
-            if ([string]::IsNullOrWhiteSpace($packageName) -or [string]::IsNullOrWhiteSpace($processorArchitecture)) {
-              throw "Dependencies Package node is missing Name or ProcessorArchitecture attributes."
-            }
-
-            $packageFileName = "$packageName.$processorArchitecture.msix"
-            $packageNode.SetAttribute("Uri", "$releaseBaseUrl/$packageFileName")
-          }
-
-          $updateSettingsNode = $appInstallerXml.SelectSingleNode("//ai:UpdateSettings", $namespaceManager)
-          if ($null -eq $updateSettingsNode) {
-            $updateSettingsNode = $appInstallerXml.CreateElement("UpdateSettings", $appInstallerXml.DocumentElement.NamespaceURI)
-            [void]$appInstallerXml.DocumentElement.AppendChild($updateSettingsNode)
-          }
-
-          $automaticBackgroundTaskNode = $updateSettingsNode.SelectSingleNode("ai:AutomaticBackgroundTask", $namespaceManager)
-          if ($null -eq $automaticBackgroundTaskNode) {
-            $automaticBackgroundTaskNode = $appInstallerXml.CreateElement("AutomaticBackgroundTask", $appInstallerXml.DocumentElement.NamespaceURI)
-            [void]$updateSettingsNode.AppendChild($automaticBackgroundTaskNode)
-          }
-
-          $appInstallerXml.Save($appInstallerPath.FullName)
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
