@@ -9,6 +9,9 @@ on:
       release:
         required: true
         type: boolean
+
+permissions:
+  id-token: write
     
 jobs:
   build:
