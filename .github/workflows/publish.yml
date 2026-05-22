@@ -25,4 +25,5 @@ jobs:
         with:
           files: |
             ./**/*.msixbundle
+            ./**/*.msix
           draft: true
