@@ -114,7 +114,7 @@ jobs:
       - name: Generate AppInstaller
         if: ${{ matrix.channel == 'AppInstaller' }}
         run: |
-          Get-ChildItem
+          Get-ChildItem output
           $outputDir = "${{ github.workspace }}\output"
           $appInstallerPath = Get-ChildItem -Path $outputDir -Filter "*.appinstaller" -File | Select-Object -First 1
           $msixbundlePath = Get-ChildItem -Path $outputDir -Filter "*.msixbundle" -File | Select-Object -First 1
