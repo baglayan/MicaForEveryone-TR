@@ -114,7 +114,6 @@ jobs:
       - name: Generate AppInstaller
         if: ${{ matrix.channel == 'AppInstaller' }}
         run: |
-          Get-ChildItem output
           $outputDir = "${{ github.workspace }}\output"
           $appInstallerPath = Get-ChildItem -Path $outputDir -Filter "*.appinstaller" -File | Select-Object -First 1
           $msixbundlePath = Get-ChildItem -Path $outputDir -Filter "*.msixbundle" -File | Select-Object -First 1
@@ -128,10 +127,14 @@ jobs:
 
           $releaseBaseUrl = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}"
           $msixbundleFileName = $msixbundlePath.Name
+          $targetAppInstallerFileName = "MicaForEveryone.appinstaller"
+          $targetAppInstallerPath = Join-Path $outputDir $targetAppInstallerFileName
 
           [xml]$appInstallerXml = Get-Content -LiteralPath $appInstallerPath.FullName
           $namespaceManager = New-Object System.Xml.XmlNamespaceManager($appInstallerXml.NameTable)
           $namespaceManager.AddNamespace("ai", $appInstallerXml.DocumentElement.NamespaceURI)
+
+          $appInstallerXml.DocumentElement.SetAttribute("Uri", "https://micaforeveryone.github.io/MicaForEveryone.appinstaller")
 
           $mainBundleNode = $appInstallerXml.SelectSingleNode("//ai:MainBundle", $namespaceManager)
           if ($null -eq $mainBundleNode) {
@@ -166,6 +169,10 @@ jobs:
           }
 
           $appInstallerXml.Save($appInstallerPath.FullName)
+
+          if ($appInstallerPath.FullName -ine $targetAppInstallerPath) {
+            Move-Item -LiteralPath $appInstallerPath.FullName -Destination $targetAppInstallerPath -Force
+          }
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:

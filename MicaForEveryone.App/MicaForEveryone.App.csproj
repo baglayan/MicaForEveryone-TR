@@ -59,6 +59,7 @@
 		<AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
     <AppxBundle>Always</AppxBundle>
     <AppInstallerUri>https://example.com</AppInstallerUri>
+    <AppxBundleNameForOutput>bundle</AppxBundleNameForOutput>
 	</PropertyGroup>
 
 	<ItemGroup>
