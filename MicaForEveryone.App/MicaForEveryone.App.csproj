@@ -2,7 +2,6 @@
 	<PropertyGroup>
 		
 		<!-- Built-in -->
-		
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
@@ -17,19 +16,16 @@
 		<LangVersion>preview</LangVersion>
 		
 		<!-- Enable AOT publishing on F5 -->
-		
 		<PublishAot>true</PublishAot>
 		<IncludePublishItemsOutputGroup Condition="'$(Configuration)' == 'Release'">true</IncludePublishItemsOutputGroup>
 		
 		<!-- App-specific settings -->
-		
 		<ApplicationIcon>Assets\MicaForEveryone.ico</ApplicationIcon>
 		<DefineConstants>DISABLE_XAML_GENERATED_MAIN;$(DefineConstants)</DefineConstants>
 		<Nullable>enable</Nullable>
 		<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
 
 		<!-- C#/WinRT AOT compliance -->
-
 		<CsWinRTRcwFactoryFallbackGeneratorForceOptOut>true</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
 		<WarnAsError>CsWinRT1028;CsWinRT1029</WarnAsError>
 		<CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
@@ -41,7 +37,7 @@
 
 		<!-- False positives -->
 		<NoWarn>$(NoWarn);WMC1506</NoWarn>
-    <EnableBindingDiagnostics>false</EnableBindingDiagnostics>
+    	<EnableBindingDiagnostics>false</EnableBindingDiagnostics>
 
 		<!-- Versioning -->
 		<Version>2.0.6.0</Version>
@@ -54,7 +50,7 @@
 		</RestoreAdditionalProjectSources>
     
     <!-- Packaging -->
-		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<GenerateAppInstallerFile Condition="'$(UapAppxPackageBuildMode)' != 'CI'">True</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
@@ -62,6 +58,7 @@
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AppxBundlePlatforms>x86|x64|arm64</AppxBundlePlatforms>
     <AppxBundle>Always</AppxBundle>
+    <AppInstallerUri>https://example.com</AppInstallerUri>
 	</PropertyGroup>
 
 	<ItemGroup>
